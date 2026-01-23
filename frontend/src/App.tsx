@@ -25,9 +25,13 @@ const emptyForm: FormState = {
 export default function App() {
   const [todos, setTodos] = useState<Todo[]>([]);
   const [form, setForm] = useState<FormState>(emptyForm);
-  const [editingId, setEditingId] = useState<number | null>(null);
-  const [editingCompleted, setEditingCompleted] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [editingRowId, setEditingRowId] = useState<number | null>(null);
+  const [editingField, setEditingField] = useState<
+    "due_date" | "title" | "assignee" | null
+  >(null);
+  const [editDraft, setEditDraft] = useState<FormState>(emptyForm);
+  const [savingRowId, setSavingRowId] = useState<number | null>(null);
   const [sort, setSort] = useState("due_date");
   const [order, setOrder] = useState<"asc" | "desc">("asc");
   const [loading, setLoading] = useState(false);
@@ -35,8 +39,6 @@ export default function App() {
   const [assigneeFilter, setAssigneeFilter] = useState("");
   const [visibleCount, setVisibleCount] = useState(20);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
-
-  const isEditing = editingId !== null;
 
   const sortedLabel = useMemo(() => {
     const sortLabelMap: Record<string, string> = {
@@ -73,8 +75,6 @@ export default function App() {
 
   const resetForm = () => {
     setForm(emptyForm);
-    setEditingId(null);
-    setEditingCompleted(false);
     setShowForm(false);
   };
 
@@ -91,35 +91,18 @@ export default function App() {
     e?.preventDefault();
     setError(null);
     try {
-      const payload = {
-        ...form,
-        completed: isEditing ? editingCompleted : false,
-      };
-      const res = await fetch(
-        isEditing ? `${API_URL}/todos/${editingId}` : `${API_URL}/todos`,
-        {
-          method: isEditing ? "PUT" : "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload),
-        }
-      );
+      const payload = { ...form, completed: false };
+      const res = await fetch(`${API_URL}/todos`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!res.ok) throw new Error("Failed to save todo");
       resetForm();
       await fetchTodos();
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
     }
-  };
-
-  const handleEdit = (todo: Todo) => {
-    setEditingId(todo.id);
-    setEditingCompleted(todo.completed);
-    setForm({
-      due_date: todo.due_date,
-      title: todo.title,
-      assignee: todo.assignee,
-    });
-    setShowForm(true);
   };
 
   const handleDelete = async (todoId: number) => {
@@ -153,6 +136,56 @@ export default function App() {
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unexpected error");
     }
+  };
+
+  const saveInlineEdit = async (todo: Todo) => {
+    if (editingRowId !== todo.id) return;
+    const trimmedTitle = editDraft.title.trim();
+    const trimmedAssignee = editDraft.assignee.trim();
+    if (!trimmedTitle || !trimmedAssignee || !editDraft.due_date) {
+      setError("期日・TODO名・担当者は必須です。");
+      return;
+    }
+    const noChanges =
+      editDraft.due_date === todo.due_date &&
+      trimmedTitle === todo.title &&
+      trimmedAssignee === todo.assignee;
+    setEditingRowId(null);
+    setEditingField(null);
+    if (noChanges) return;
+    setError(null);
+    setSavingRowId(todo.id);
+    try {
+      const res = await fetch(`${API_URL}/todos/${todo.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          due_date: editDraft.due_date,
+          title: trimmedTitle,
+          assignee: trimmedAssignee,
+          completed: todo.completed,
+        }),
+      });
+      if (!res.ok) throw new Error("Failed to update todo");
+      await fetchTodos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    } finally {
+      setSavingRowId(null);
+    }
+  };
+
+  const beginFieldEdit = (
+    todo: Todo,
+    field: "due_date" | "title" | "assignee"
+  ) => {
+    setEditingRowId(todo.id);
+    setEditingField(field);
+    setEditDraft({
+      due_date: todo.due_date,
+      title: todo.title,
+      assignee: todo.assignee,
+    });
   };
 
   const toggleSort = (field: string) => {
@@ -195,8 +228,16 @@ export default function App() {
 
         <section className="rounded-xl bg-white p-6 shadow">
           <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold">並び順: {sortedLabel}</h2>
+            <div>
+              <h2 className="text-lg font-semibold">並び順: {sortedLabel}</h2>
+              <p className="mt-1 text-xs text-slate-500">
+                ダブルクリックで編集。入力後にフォーカスが外れると保存されます。
+              </p>
+            </div>
             <div className="flex items-center gap-2">
+              {savingRowId !== null && (
+                <span className="text-xs text-slate-500">保存中...</span>
+              )}
               <input
                 type="text"
                 value={assigneeFilter}
@@ -310,7 +351,7 @@ export default function App() {
                           onClick={handleSubmit}
                           className="rounded bg-slate-900 px-3 py-2 text-white hover:bg-slate-800"
                         >
-                          {isEditing ? "更新" : "追加"}
+                          追加
                         </button>
                         <button
                           type="button"
@@ -330,11 +371,87 @@ export default function App() {
                       todo.completed ? "bg-slate-200 text-slate-600" : ""
                     }`}
                   >
-                    <td className="py-3 pr-4 text-sm">
-                      {formatDateSlash(todo.due_date)}
+                    <td
+                      className="py-3 pr-4 text-sm"
+                      onDoubleClick={() => beginFieldEdit(todo, "due_date")}
+                    >
+                      {editingRowId === todo.id &&
+                      editingField === "due_date" ? (
+                        <input
+                          type="date"
+                          value={editDraft.due_date}
+                          onChange={(e) =>
+                            setEditDraft({
+                              ...editDraft,
+                              due_date: e.target.value,
+                            })
+                          }
+                          onBlur={() => saveInlineEdit(todo)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          autoFocus
+                          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                        />
+                      ) : (
+                        formatDateSlash(todo.due_date)
+                      )}
                     </td>
-                    <td className="py-3 pr-4">{todo.title}</td>
-                    <td className="py-3 pr-4 text-sm">{todo.assignee}</td>
+                    <td
+                      className="py-3 pr-4"
+                      onDoubleClick={() => beginFieldEdit(todo, "title")}
+                    >
+                      {editingRowId === todo.id &&
+                      editingField === "title" ? (
+                        <input
+                          type="text"
+                          value={editDraft.title}
+                          onChange={(e) =>
+                            setEditDraft({ ...editDraft, title: e.target.value })
+                          }
+                          onBlur={() => saveInlineEdit(todo)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          autoFocus
+                          className="w-full rounded border border-slate-300 px-2 py-1"
+                        />
+                      ) : (
+                        todo.title
+                      )}
+                    </td>
+                    <td
+                      className="py-3 pr-4 text-sm"
+                      onDoubleClick={() => beginFieldEdit(todo, "assignee")}
+                    >
+                      {editingRowId === todo.id &&
+                      editingField === "assignee" ? (
+                        <input
+                          type="text"
+                          value={editDraft.assignee}
+                          onChange={(e) =>
+                            setEditDraft({
+                              ...editDraft,
+                              assignee: e.target.value,
+                            })
+                          }
+                          onBlur={() => saveInlineEdit(todo)}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") {
+                              e.currentTarget.blur();
+                            }
+                          }}
+                          autoFocus
+                          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                        />
+                      ) : (
+                        todo.assignee
+                      )}
+                    </td>
                     <td className="py-3 text-right">
                       <div className="flex justify-end gap-2">
                         <button
@@ -342,12 +459,6 @@ export default function App() {
                           onClick={() => handleComplete(todo)}
                         >
                           {todo.completed ? "完了取消" : "完了"}
-                        </button>
-                        <button
-                          className="rounded border border-slate-300 px-2 py-1"
-                          onClick={() => handleEdit(todo)}
-                        >
-                          編集
                         </button>
                         <button
                           className="rounded border border-red-300 px-2 py-1 text-red-600"
