@@ -49,6 +49,10 @@ export default function App() {
     if (typeof window === "undefined") return "";
     return localStorage.getItem("assigneeFilter") ?? "";
   });
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "b";
+    return localStorage.getItem("uiTheme") ?? "b";
+  });
   const [showCompleted, setShowCompleted] = useState(() => {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("showCompleted") === "true";
@@ -175,6 +179,11 @@ export default function App() {
     if (typeof window === "undefined") return;
     localStorage.setItem("showCompleted", String(showCompleted));
   }, [showCompleted]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("uiTheme", theme);
+  }, [theme]);
 
 
   const resetForm = () => {
@@ -361,7 +370,7 @@ export default function App() {
           readOnly
           value={value ? formatDateSlash(value) : ""}
           onClick={() => setOpen((prev) => !prev)}
-          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
           placeholder="YYYY/MM/DD"
         />
         {open && (
@@ -485,23 +494,23 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen px-6 py-10">
+    <div className={`app-shell theme-${theme} min-h-screen px-6 py-10`}>
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="space-y-2">
-          <h1 className="text-3xl font-semibold">シンプルタスク管理</h1>
+          <h1 className="app-title text-3xl font-semibold">シンプルタスク管理</h1>
         </header>
 
-        <section className="rounded-xl bg-white p-6 shadow">
+        <section className="app-card rounded-xl bg-white p-6 shadow">
           <div className="space-y-3">
             <div className="flex items-start justify-between gap-4 text-xs text-slate-600">
               <div className="flex flex-col gap-2">
                 <div className="flex items-center gap-4">
                   <div className="flex items-center gap-2">
-                    <span className="inline-block h-3 w-3 rounded-sm bg-red-100" />
+                    <span className="app-dot app-dot-danger inline-block h-3 w-3 rounded-sm bg-red-100" />
                     <span>期日超過</span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="inline-block h-3 w-3 rounded-sm bg-yellow-100" />
+                    <span className="app-dot app-dot-warn inline-block h-3 w-3 rounded-sm bg-yellow-100" />
                     <span>3日前</span>
                   </div>
                 </div>
@@ -509,7 +518,7 @@ export default function App() {
                   ダブルクリックで編集。入力後にフォーカスが外れると保存されます。
                 </p>
               </div>
-              <div className="text-right text-xs text-slate-600">
+              <div className="app-sort text-right text-xs text-slate-600">
                 並び順: {sortedLabel}
               </div>
             </div>
@@ -527,13 +536,13 @@ export default function App() {
                   type="text"
                   value={assigneeFilter}
                   onChange={(e) => setAssigneeFilter(e.target.value)}
-                  className="rounded border border-slate-300 px-3 py-1 text-sm"
+                  className="app-input rounded border border-slate-300 px-3 py-1 text-sm"
                   placeholder="担当者でフィルタ"
                 />
                 <select
                   value={assigneeFilter}
                   onChange={(e) => setAssigneeFilter(e.target.value)}
-                  className="rounded border border-slate-300 px-2 py-1 text-sm"
+                  className="app-select rounded border border-slate-300 px-2 py-1 text-sm"
                 >
                   <option value="">担当者を選択</option>
                   {assigneeOptions.map((name) => (
@@ -547,12 +556,23 @@ export default function App() {
                     <option key={name} value={name} />
                   ))}
                 </datalist>
+                <select
+                  value={theme}
+                  onChange={(e) => setTheme(e.target.value)}
+                  className="app-select rounded border border-slate-300 px-2 py-1 text-sm"
+                >
+                  <option value="b">スタイルB</option>
+                  <option value="c">スタイルC</option>
+                  <option value="d">スタイルD</option>
+                  <option value="f">スタイルF</option>
+                  <option value="g">スタイルG</option>
+                </select>
                 <label className="ml-2 flex items-center gap-2 text-xs text-slate-600">
                   <input
                     type="checkbox"
                     checked={showCompleted}
                     onChange={(e) => setShowCompleted(e.target.checked)}
-                    className="h-4 w-4"
+                    className="app-checkbox h-4 w-4"
                   />
                   完了も読み込む
                 </label>
@@ -565,9 +585,9 @@ export default function App() {
           )}
 
           <div className="mt-4 overflow-x-auto px-3">
-            <table className="min-w-full border-collapse text-left text-sm">
+            <table className="app-table min-w-full border-collapse text-left text-sm">
               <thead>
-                <tr className="border-b border-slate-200 text-slate-600">
+                <tr className="app-thead border-b border-slate-200 text-slate-600">
                   {[
                     { key: "due_date", label: "期日" },
                     { key: "title", label: "TODO名" },
@@ -575,14 +595,14 @@ export default function App() {
                   ].map((col) => (
                     <th
                       key={col.key}
-                      className={`py-3 pr-4 font-medium ${
+                      className={`app-th py-3 pr-4 font-medium ${
                         col.key === "title"
                           ? "w-6/12"
                           : "w-2/12"
                       }`}
                     >
                       <button
-                        className="flex items-center gap-1 hover:text-slate-900"
+                        className="app-sort-btn flex items-center gap-1 hover:text-slate-900"
                         onClick={() => toggleSort(col.key)}
                       >
                         {col.label}
@@ -594,14 +614,16 @@ export default function App() {
                       </button>
                     </th>
                   ))}
-                  <th className="py-3 pr-6 text-right font-medium">操作</th>
+                  <th className="app-th py-3 pr-6 text-right font-medium">
+                    操作
+                  </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-slate-100">
                   <td colSpan={4} className="py-3 pr-4">
                     <button
-                      className="rounded border border-slate-300 px-3 py-1 text-sm"
+                      className="app-btn rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
                         setForm(emptyForm);
                         setShowForm(true);
@@ -629,7 +651,7 @@ export default function App() {
                           setForm({ ...form, title: e.target.value })
                         }
                         required
-                        className="w-full rounded border border-slate-300 px-3 py-2"
+                        className="app-input w-full rounded border border-slate-300 px-3 py-2"
                         placeholder="例: 仕様書レビュー"
                         list="favorite-title-options-add"
                       />
@@ -645,7 +667,7 @@ export default function App() {
                             if (!e.target.value) return;
                             setForm({ ...form, title: e.target.value });
                           }}
-                          className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                          className="app-select mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
                         >
                           <option value="">お気に入りから選択</option>
                           {favoritesForAssignee(form.assignee).map((title) => (
@@ -664,7 +686,7 @@ export default function App() {
                           setForm({ ...form, assignee: e.target.value })
                         }
                         required
-                        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        className="app-input w-full rounded border border-slate-300 px-3 py-2 text-sm"
                         placeholder="例: Tanaka"
                         list="assignee-options"
                       />
@@ -674,14 +696,14 @@ export default function App() {
                         <button
                           type="button"
                           onClick={handleSubmit}
-                          className="rounded bg-slate-900 px-3 py-2 text-white hover:bg-slate-800"
+                          className="app-btn app-btn-primary rounded bg-slate-900 px-3 py-2 text-white hover:bg-slate-800"
                         >
                           追加
                         </button>
                         <button
                           type="button"
                           onClick={resetForm}
-                          className="rounded border border-slate-300 px-3 py-2"
+                          className="app-btn rounded border border-slate-300 px-3 py-2"
                         >
                           閉じる
                         </button>
@@ -697,7 +719,7 @@ export default function App() {
                     className="border-b border-slate-100 last:border-0"
                   >
                     <td
-                      className={`py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
+                      className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
                       onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                     >
                       {editingRowId === todo.id &&
@@ -714,7 +736,7 @@ export default function App() {
                       )}
                     </td>
                     <td
-                      className={`py-3 pr-4 ${rowBgClass}`}
+                      className={`app-td py-3 pr-4 ${rowBgClass}`}
                       onDoubleClick={() => beginFieldEdit(todo, "title")}
                     >
                       {editingRowId === todo.id &&
@@ -742,7 +764,7 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="w-full rounded border border-slate-300 px-2 py-1"
+                            className="app-input w-full rounded border border-slate-300 px-2 py-1"
                             list={`favorite-title-options-${todo.id}`}
                           />
                           <datalist id={`favorite-title-options-${todo.id}`}>
@@ -760,7 +782,7 @@ export default function App() {
                                   title: e.target.value,
                                 });
                               }}
-                              className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                              className="app-select w-full rounded border border-slate-300 px-2 py-1 text-sm"
                             >
                               <option value="">お気に入りから選択</option>
                               {favoritesForAssignee(editDraft.assignee).map((title) => (
@@ -776,7 +798,7 @@ export default function App() {
                       )}
                     </td>
                     <td
-                      className={`py-3 pr-4 text-sm ${rowBgClass}`}
+                      className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
                       onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                     >
                       {editingRowId === todo.id &&
@@ -797,17 +819,17 @@ export default function App() {
                             }
                           }}
                           autoFocus
-                          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                          className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
                           list="assignee-options"
                         />
                       ) : (
                         todo.assignee
                       )}
                     </td>
-                    <td className={`py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
+                    <td className={`app-td py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
                       <div className="flex justify-end gap-2">
                         <button
-                          className={`rounded border px-2 py-1 text-slate-700 ${
+                          className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${
                             todo.favorite
                               ? "border-yellow-300 text-yellow-600"
                               : "border-slate-300"
@@ -819,13 +841,13 @@ export default function App() {
                           {todo.favorite ? "★" : "☆"}
                         </button>
                         <button
-                          className="rounded border border-emerald-300 px-2 py-1 text-emerald-700"
+                          className="app-btn rounded border border-emerald-300 px-2 py-1 text-emerald-700"
                           onClick={() => handleComplete(todo)}
                         >
                           {todo.completed ? "完了取消" : "完了"}
                         </button>
                         <button
-                          className="rounded border border-red-300 px-2 py-1 text-red-600"
+                          className="app-btn rounded border border-red-300 px-2 py-1 text-red-600"
                           onClick={() => handleDelete(todo.id)}
                         >
                           削除
