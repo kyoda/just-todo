@@ -9,3 +9,12 @@
 input, button, select {
   font: inherit;
 }
+
+.rdp .rdp-day.rdp-sunday,
+.rdp .rdp-day.rdp-holiday {
+  color: #dc2626;
+}
+
+.rdp .rdp-day.rdp-saturday {
+  color: #2563eb;
+}

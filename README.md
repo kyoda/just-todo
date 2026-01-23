@@ -4,14 +4,15 @@
 
 ## Features
 - Todo一覧表示 / 追加 / 更新 / 削除
-- ソート（id / due_date / title / assignee）
+- ソート（due_date / title / assignee）
 - 担当者名でのフィルタ
 - 完了/完了取消（完了済みは一覧の最後に表示）
 - スクロールで自動表示（簡易インフィニットスクロール）
+- カレンダーで期日選択（日曜/祝日=赤、土曜=青）
 - シングルページ構成（画面遷移なし）
 
 ## Tech Stack
-- Frontend: React + Vite + TypeScript + Tailwind CSS
+- Frontend: React + Vite + TypeScript + Tailwind CSS + React Day Picker
 - Backend: Python + FastAPI + SQLAlchemy
 - DB: SQLite3（ファイル永続化）
 - Container: Docker / Docker Compose
@@ -39,6 +40,9 @@ docker compose up -d
 ## Environment Variables
 - Frontend
   - `VITE_API_URL`: APIのベースURL（デフォルト: `http://localhost:8000`）
+
+## Holiday Data
+- 日本の祝日データは `holidays-jp` 公開APIを参照します。
 
 ## Data Persistence
 - SQLiteデータベースは `backend/data/todos.db` に保存されます。

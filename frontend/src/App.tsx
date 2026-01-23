@@ -1,3 +1,4 @@
+import { DayPicker } from "react-day-picker";
 import { useEffect, useMemo, useRef, useState } from "react";
 
 type Todo = {
@@ -32,11 +33,26 @@ export default function App() {
   >(null);
   const [editDraft, setEditDraft] = useState<FormState>(emptyForm);
   const [savingRowId, setSavingRowId] = useState<number | null>(null);
-  const [sort, setSort] = useState("due_date");
-  const [order, setOrder] = useState<"asc" | "desc">("asc");
+  const [sort, setSort] = useState(() => {
+    if (typeof window === "undefined") return "due_date";
+    return localStorage.getItem("sort") ?? "due_date";
+  });
+  const [order, setOrder] = useState<"asc" | "desc">(() => {
+    if (typeof window === "undefined") return "asc";
+    const stored = localStorage.getItem("order");
+    return stored === "desc" ? "desc" : "asc";
+  });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [assigneeFilter, setAssigneeFilter] = useState("");
+  const [assigneeFilter, setAssigneeFilter] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("assigneeFilter") ?? "";
+  });
+  const [showCompleted, setShowCompleted] = useState(() => {
+    if (typeof window === "undefined") return false;
+    return localStorage.getItem("showCompleted") === "true";
+  });
+  const [holidays, setHolidays] = useState<Set<string>>(new Set());
   const [assigneeOptions, setAssigneeOptions] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
@@ -95,6 +111,36 @@ export default function App() {
     fetchTodos();
   }, [sort, order, assigneeFilter]);
 
+  useEffect(() => {
+    const fetchHolidays = async () => {
+      try {
+        const res = await fetch("https://holidays-jp.github.io/api/v1/date.json");
+        if (!res.ok) return;
+        const data: Record<string, string> = await res.json();
+        setHolidays(new Set(Object.keys(data)));
+      } catch {
+        // ignore holiday fetch errors
+      }
+    };
+    fetchHolidays();
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("assigneeFilter", assigneeFilter);
+  }, [assigneeFilter]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("sort", sort);
+    localStorage.setItem("order", order);
+  }, [sort, order]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("showCompleted", String(showCompleted));
+  }, [showCompleted]);
+
   const resetForm = () => {
     setForm(emptyForm);
     setShowForm(false);
@@ -117,6 +163,17 @@ export default function App() {
     ];
     return `${formatDateSlash(value)}(${weekday})`;
   };
+
+  const formatDateIso = (value: Date) => {
+    const year = value.getFullYear();
+    const month = `${value.getMonth() + 1}`.padStart(2, "0");
+    const day = `${value.getDate()}`.padStart(2, "0");
+    return `${year}-${month}-${day}`;
+  };
+
+  const holidayDates = useMemo(() => {
+    return Array.from(holidays).map((date) => new Date(`${date}T00:00:00`));
+  }, [holidays]);
 
   const handleSubmit = async (e?: React.FormEvent) => {
     e?.preventDefault();
@@ -219,6 +276,68 @@ export default function App() {
     });
   };
 
+  const DatePickerInput = ({
+    value,
+    onChange,
+    onCommit,
+  }: {
+    value: string;
+    onChange: (value: string) => void;
+    onCommit?: () => void;
+  }) => {
+    const [open, setOpen] = useState(false);
+    const wrapperRef = useRef<HTMLDivElement | null>(null);
+    const selected = value ? new Date(`${value}T00:00:00`) : undefined;
+
+    useEffect(() => {
+      const handleClick = (event: MouseEvent) => {
+        if (!wrapperRef.current) return;
+        if (!wrapperRef.current.contains(event.target as Node)) {
+          setOpen(false);
+        }
+      };
+      document.addEventListener("mousedown", handleClick);
+      return () => document.removeEventListener("mousedown", handleClick);
+    }, []);
+
+    return (
+      <div ref={wrapperRef} className="relative">
+        <input
+          type="text"
+          readOnly
+          value={value ? formatDateSlash(value) : ""}
+          onClick={() => setOpen((prev) => !prev)}
+          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          placeholder="YYYY/MM/DD"
+        />
+        {open && (
+          <div className="absolute z-10 mt-2 rounded border border-slate-200 bg-white p-2 shadow">
+            <DayPicker
+              mode="single"
+              selected={selected}
+              onSelect={(date) => {
+                if (!date) return;
+                onChange(formatDateIso(date));
+                setOpen(false);
+                onCommit?.();
+              }}
+              modifiers={{
+                holiday: holidayDates,
+                sunday: { dayOfWeek: [0] },
+                saturday: { dayOfWeek: [6] },
+              }}
+              modifiersClassNames={{
+                holiday: "rdp-holiday",
+                sunday: "rdp-sunday",
+                saturday: "rdp-saturday",
+              }}
+            />
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const toggleSort = (field: string) => {
     if (sort === field) {
       setOrder(order === "asc" ? "desc" : "asc");
@@ -230,7 +349,12 @@ export default function App() {
 
   useEffect(() => {
     setVisibleCount(20);
-  }, [todos]);
+  }, [todos, showCompleted]);
+
+  const filteredTodos = useMemo(
+    () => (showCompleted ? todos : todos.filter((todo) => !todo.completed)),
+    [showCompleted, todos]
+  );
 
   useEffect(() => {
     const sentinel = sentinelRef.current;
@@ -238,16 +362,16 @@ export default function App() {
     const observer = new IntersectionObserver((entries) => {
       const entry = entries[0];
       if (entry.isIntersecting) {
-        setVisibleCount((prev) => Math.min(prev + 20, todos.length));
+        setVisibleCount((prev) => Math.min(prev + 20, filteredTodos.length));
       }
     });
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [todos.length]);
+  }, [filteredTodos.length]);
 
   const visibleTodos = useMemo(
-    () => todos.slice(0, visibleCount),
-    [todos, visibleCount]
+    () => filteredTodos.slice(0, visibleCount),
+    [filteredTodos, visibleCount]
   );
 
   const getRowClass = (todo: Todo) => {
@@ -325,14 +449,21 @@ export default function App() {
                     </option>
                   ))}
                 </select>
+                <datalist id="assignee-options">
+                  {assigneeOptions.map((name) => (
+                    <option key={name} value={name} />
+                  ))}
+                </datalist>
+                <label className="ml-2 flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={showCompleted}
+                    onChange={(e) => setShowCompleted(e.target.checked)}
+                    className="h-4 w-4"
+                  />
+                  完了も読み込む
+                </label>
               </div>
-              <button
-                className="rounded border border-slate-300 px-3 py-1 text-sm"
-                onClick={fetchTodos}
-                disabled={loading}
-              >
-                再読み込み
-              </button>
             </div>
           </div>
 
@@ -379,7 +510,6 @@ export default function App() {
                     <button
                       className="rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
-                        setEditingId(null);
                         setForm(emptyForm);
                         setShowForm(true);
                       }}
@@ -391,14 +521,11 @@ export default function App() {
                 {showForm && (
                   <tr className="border-b border-slate-100">
                     <td className="py-3 pr-4">
-                      <input
-                        type="date"
+                      <DatePickerInput
                         value={form.due_date}
-                        onChange={(e) =>
-                          setForm({ ...form, due_date: e.target.value })
+                        onChange={(value) =>
+                          setForm({ ...form, due_date: value })
                         }
-                        required
-                        className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
                       />
                     </td>
                     <td className="py-3 pr-4">
@@ -423,6 +550,7 @@ export default function App() {
                         required
                         className="w-full rounded border border-slate-300 px-3 py-2 text-sm"
                         placeholder="例: Tanaka"
+                        list="assignee-options"
                       />
                     </td>
                     <td className="py-3 pr-6 text-right">
@@ -458,23 +586,12 @@ export default function App() {
                     >
                       {editingRowId === todo.id &&
                       editingField === "due_date" ? (
-                        <input
-                          type="date"
+                        <DatePickerInput
                           value={editDraft.due_date}
-                          onChange={(e) =>
-                            setEditDraft({
-                              ...editDraft,
-                              due_date: e.target.value,
-                            })
+                          onChange={(value) =>
+                            setEditDraft({ ...editDraft, due_date: value })
                           }
-                          onBlur={() => saveInlineEdit(todo)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
-                            }
-                          }}
-                          autoFocus
-                          className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                          onCommit={() => saveInlineEdit(todo)}
                         />
                       ) : (
                         formatDateWithWeekday(todo.due_date)
@@ -528,6 +645,7 @@ export default function App() {
                           }}
                           autoFocus
                           className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                          list="assignee-options"
                         />
                       ) : (
                         todo.assignee
