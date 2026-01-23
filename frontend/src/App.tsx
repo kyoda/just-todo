@@ -565,11 +565,11 @@ export default function App() {
                   onChange={(e) => setTheme(e.target.value)}
                   className="app-select rounded border border-slate-300 px-2 py-1 text-sm"
                 >
-                  <option value="b">スタイルB</option>
-                  <option value="c">スタイルC</option>
-                  <option value="d">スタイルD</option>
-                  <option value="f">スタイルF</option>
-                  <option value="g">スタイルG</option>
+                  <option value="b">ウォーム・クラフト</option>
+                  <option value="c">ミッドナイト・ネオン</option>
+                  <option value="d">ピーチ・ソフト</option>
+                  <option value="f">スカイ・グラス</option>
+                  <option value="g">ブルータル・モノ</option>
                 </select>
                 <label className="ml-2 flex items-center gap-2 text-xs text-slate-600">
                   <input
