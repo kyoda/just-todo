@@ -37,6 +37,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [assigneeFilter, setAssigneeFilter] = useState("");
+  const [assigneeOptions, setAssigneeOptions] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
@@ -50,6 +51,24 @@ export default function App() {
     return `${sortLabelMap[sort] ?? sort}の${orderLabel}`;
   }, [sort, order]);
 
+  const fetchAssignees = async () => {
+    try {
+      const params = new URLSearchParams({ sort: "assignee", order: "asc" });
+      const res = await fetch(`${API_URL}/todos?${params.toString()}`);
+      if (!res.ok) return;
+      const data: Todo[] = await res.json();
+      const set = new Set<string>();
+      data.forEach((todo) => {
+        if (todo.assignee.trim()) {
+          set.add(todo.assignee.trim());
+        }
+      });
+      setAssigneeOptions(Array.from(set).sort((a, b) => a.localeCompare(b)));
+    } catch {
+      // ignore assignee list failures
+    }
+  };
+
   const fetchTodos = async () => {
     setLoading(true);
     setError(null);
@@ -58,7 +77,10 @@ export default function App() {
       if (assigneeFilter.trim()) {
         params.set("assignee", assigneeFilter.trim());
       }
-      const res = await fetch(`${API_URL}/todos?${params.toString()}`);
+      const [res] = await Promise.all([
+        fetch(`${API_URL}/todos?${params.toString()}`),
+        fetchAssignees(),
+      ]);
       if (!res.ok) throw new Error("Failed to load todos");
       const data: Todo[] = await res.json();
       setTodos(data);
@@ -85,6 +107,15 @@ export default function App() {
       return `${parts[0]}/${parts[1]}/${parts[2]}`;
     }
     return value;
+  };
+
+  const formatDateWithWeekday = (value: string) => {
+    if (!value) return "";
+    const dateObj = new Date(`${value}T00:00:00`);
+    const weekday = ["日", "月", "火", "水", "木", "金", "土"][
+      dateObj.getDay()
+    ];
+    return `${formatDateSlash(value)}(${weekday})`;
   };
 
   const handleSubmit = async (e?: React.FormEvent) => {
@@ -219,6 +250,28 @@ export default function App() {
     [todos, visibleCount]
   );
 
+  const getRowClass = (todo: Todo) => {
+    if (todo.completed) {
+      return "bg-slate-200 text-slate-600";
+    }
+    const due = new Date(`${todo.due_date}T00:00:00`);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffMs = due.getTime() - today.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) {
+      return "bg-red-100";
+    }
+    if (diffDays <= 3) {
+      return "bg-yellow-100";
+    }
+    return "";
+  };
+
+  useEffect(() => {
+    fetchAssignees();
+  }, []);
+
   return (
     <div className="min-h-screen px-6 py-10">
       <div className="mx-auto max-w-5xl space-y-8">
@@ -227,24 +280,52 @@ export default function App() {
         </header>
 
         <section className="rounded-xl bg-white p-6 shadow">
-          <div className="flex items-center justify-between">
-            <div>
-              <h2 className="text-lg font-semibold">並び順: {sortedLabel}</h2>
-              <p className="mt-1 text-xs text-slate-500">
-                ダブルクリックで編集。入力後にフォーカスが外れると保存されます。
-              </p>
+          <div className="space-y-3">
+            <div className="flex items-start justify-between gap-4 text-xs text-slate-600">
+              <div className="flex flex-col gap-2">
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-3 w-3 rounded-sm bg-red-100" />
+                    <span>期日超過</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <span className="inline-block h-3 w-3 rounded-sm bg-yellow-100" />
+                    <span>3日前</span>
+                  </div>
+                </div>
+                <p className="text-xs text-slate-500">
+                  ダブルクリックで編集。入力後にフォーカスが外れると保存されます。
+                </p>
+              </div>
+              <div className="text-right text-xs text-slate-600">
+                並び順: {sortedLabel}
+              </div>
             </div>
-            <div className="flex items-center gap-2">
-              {savingRowId !== null && (
-                <span className="text-xs text-slate-500">保存中...</span>
-              )}
-              <input
-                type="text"
-                value={assigneeFilter}
-                onChange={(e) => setAssigneeFilter(e.target.value)}
-                className="rounded border border-slate-300 px-3 py-1 text-sm"
-                placeholder="担当者でフィルタ"
-              />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                {savingRowId !== null && (
+                  <span className="text-xs text-slate-500">保存中...</span>
+                )}
+                <input
+                  type="text"
+                  value={assigneeFilter}
+                  onChange={(e) => setAssigneeFilter(e.target.value)}
+                  className="rounded border border-slate-300 px-3 py-1 text-sm"
+                  placeholder="担当者でフィルタ"
+                />
+                <select
+                  value={assigneeFilter}
+                  onChange={(e) => setAssigneeFilter(e.target.value)}
+                  className="rounded border border-slate-300 px-2 py-1 text-sm"
+                >
+                  <option value="">担当者を選択</option>
+                  {assigneeOptions.map((name) => (
+                    <option key={name} value={name}>
+                      {name}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <button
                 className="rounded border border-slate-300 px-3 py-1 text-sm"
                 onClick={fetchTodos}
@@ -259,7 +340,7 @@ export default function App() {
             <p className="mt-3 text-sm text-red-600">{error}</p>
           )}
 
-          <div className="mt-4 overflow-x-auto">
+          <div className="mt-4 overflow-x-auto px-3">
             <table className="min-w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="border-b border-slate-200 text-slate-600">
@@ -289,7 +370,7 @@ export default function App() {
                       </button>
                     </th>
                   ))}
-                  <th className="py-3 text-right font-medium">操作</th>
+                  <th className="py-3 pr-6 text-right font-medium">操作</th>
                 </tr>
               </thead>
               <tbody>
@@ -344,7 +425,7 @@ export default function App() {
                         placeholder="例: Tanaka"
                       />
                     </td>
-                    <td className="py-3 text-right">
+                    <td className="py-3 pr-6 text-right">
                       <div className="flex justify-end gap-2">
                         <button
                           type="button"
@@ -364,15 +445,15 @@ export default function App() {
                     </td>
                   </tr>
                 )}
-                {visibleTodos.map((todo) => (
+                {visibleTodos.map((todo) => {
+                  const rowBgClass = getRowClass(todo);
+                  return (
                   <tr
                     key={todo.id}
-                    className={`border-b border-slate-100 last:border-0 ${
-                      todo.completed ? "bg-slate-200 text-slate-600" : ""
-                    }`}
+                    className="border-b border-slate-100 last:border-0"
                   >
                     <td
-                      className="py-3 pr-4 text-sm"
+                      className={`py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
                       onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                     >
                       {editingRowId === todo.id &&
@@ -396,11 +477,11 @@ export default function App() {
                           className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
                         />
                       ) : (
-                        formatDateSlash(todo.due_date)
+                        formatDateWithWeekday(todo.due_date)
                       )}
                     </td>
                     <td
-                      className="py-3 pr-4"
+                      className={`py-3 pr-4 ${rowBgClass}`}
                       onDoubleClick={() => beginFieldEdit(todo, "title")}
                     >
                       {editingRowId === todo.id &&
@@ -425,7 +506,7 @@ export default function App() {
                       )}
                     </td>
                     <td
-                      className="py-3 pr-4 text-sm"
+                      className={`py-3 pr-4 text-sm ${rowBgClass}`}
                       onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                     >
                       {editingRowId === todo.id &&
@@ -452,7 +533,7 @@ export default function App() {
                         todo.assignee
                       )}
                     </td>
-                    <td className="py-3 text-right">
+                    <td className={`py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
                       <div className="flex justify-end gap-2">
                         <button
                           className="rounded border border-emerald-300 px-2 py-1 text-emerald-700"
@@ -469,7 +550,8 @@ export default function App() {
                       </div>
                     </td>
                   </tr>
-                ))}
+                  );
+                })}
               </tbody>
             </table>
             <div ref={sentinelRef} className="h-6" />
