@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sample H - Neo Classic</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Karla:wght@400;600&display=swap");
+      :root { --bg:#f8f5f0; --card:#ffffff; --ink:#2c2c2c; --muted:#7c7c7c; --line:#eadfce; --accent:#7b2cbf; --danger:#fbe3e3; --warn:#fff3cd; --done:#ececec; --shadow:0 12px 30px rgba(52,37,20,0.12);} 
+      *{box-sizing:border-box}
+      body{margin:0;font-family:Karla,sans-serif;background:linear-gradient(180deg,#f9f6f0, #f4efe6);color:var(--ink)}
+      .page{min-height:100vh;padding:36px 20px}
+      .container{max-width:1080px;margin:0 auto;display:grid;gap:20px}
+      .title{font-family:"DM Serif Display",serif;font-size:38px;letter-spacing:0.03em}
+      .card{background:var(--card);border-radius:10px;padding:18px;border:1px solid var(--line);box-shadow:var(--shadow)}
+      .row{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap}
+      .legend{display:flex;gap:12px;font-size:12px;color:var(--muted)}
+      .dot{width:10px;height:10px;border-radius:2px}
+      .dot-danger{background:var(--danger)}
+      .dot-warn{background:var(--warn)}
+      .dot-done{background:var(--done)}
+      .filters{display:flex;gap:8px;flex-wrap:wrap}
+      .input,.select{border:1px solid var(--line);padding:8px 10px;font-size:12px;border-radius:6px}
+      table{width:100%;border-collapse:collapse}
+      thead th{font-size:12px;color:var(--muted);padding:10px;border-bottom:1px solid var(--line)}
+      tbody td{padding:12px;border-bottom:1px solid #f0e9dc;font-size:13px}
+      .row-danger{background:var(--danger)}
+      .row-warn{background:var(--warn)}
+      .row-done{background:var(--done);color:#6b7280}
+      .btn{border:1px solid var(--line);padding:6px 10px;font-size:12px;background:#fff;border-radius:6px}
+      .btn-primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+      .actions{display:inline-flex;gap:8px}
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="container">
+        <div class="title">シンプルタスク管理</div>
+        <div class="card">
+          <div class="row">
+            <div class="legend"><span><span class="dot dot-danger"></span>期日超過</span><span><span class="dot dot-warn"></span>3日前</span><span><span class="dot dot-done"></span>完了</span></div>
+            <div class="legend">並び順: 期日の昇順</div>
+          </div>
+          <div style="height:10px"></div>
+          <div class="row">
+            <div class="filters">
+              <input class="input" placeholder="担当者でフィルタ" />
+              <select class="select"><option>担当者を選択</option></select>
+              <label class="legend"><input type="checkbox"/>完了も読み込む</label>
+            </div>
+            <span class="legend">ダブルクリックで編集</span>
+          </div>
+          <div style="height:12px"></div>
+          <table>
+            <thead><tr><th>期日</th><th>TODO名</th><th>担当者</th><th style="text-align:right">操作</th></tr></thead>
+            <tbody>
+              <tr><td>2026/01/23(金)</td><td>仕様書レビュー</td><td>Tanaka</td><td style="text-align:right"><button class="btn btn-primary">追加</button></td></tr>
+              <tr class="row-danger"><td>2026/01/10(土)</td><td>UI調整</td><td>Sato</td><td style="text-align:right"><span class="actions"><button class="btn">★</button><button class="btn">完了</button><button class="btn">削除</button></span></td></tr>
+              <tr class="row-warn"><td>2026/01/26(月)</td><td>API実装</td><td>Yamada</td><td style="text-align:right"><span class="actions"><button class="btn">☆</button><button class="btn">完了</button><button class="btn">削除</button></span></td></tr>
+              <tr><td>2026/02/03(火)</td><td>テスト追加</td><td>Tanaka</td><td style="text-align:right"><span class="actions"><button class="btn">☆</button><button class="btn">完了</button><button class="btn">削除</button></span></td></tr>
+              <tr class="row-done"><td>2026/01/08(木)</td><td>ドキュメント更新</td><td>Suzuki</td><td style="text-align:right"><span class="actions"><button class="btn">★</button><button class="btn">完了取消</button><button class="btn">削除</button></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>

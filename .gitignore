@@ -1,0 +1,21 @@
+# Node
+node_modules/
+frontend/node_modules/
+frontend/dist/
+
+# Python
+__pycache__/
+*.pyc
+
+# Vite
+frontend/.vite/
+
+# SQLite DB
+backend/data/*.db
+backend/data/*.db-journal
+
+# Env
+.env
+
+# OS
+.DS_Store

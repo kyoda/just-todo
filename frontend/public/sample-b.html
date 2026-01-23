@@ -1,0 +1,164 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>シンプルタスク管理 - Sample B</title>
+    <style>
+      @import url("https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;600;700&family=Zen+Kaku+Gothic+New:wght@400;500;700&display=swap");
+
+      :root {
+        --bg: #f2f4f8;
+        --card: #ffffff;
+        --ink: #121826;
+        --muted: #6b7280;
+        --line: #e5e7eb;
+        --accent: #2563eb;
+        --accent-2: #0f172a;
+        --danger: #fee2e2;
+        --warn: #fef9c3;
+        --done: #e5e7eb;
+        --shadow: 0 10px 25px rgba(15, 23, 42, 0.06);
+        --radius: 14px;
+      }
+
+      * { box-sizing: border-box; }
+      body {
+        margin: 0;
+        font-family: "Space Grotesk", "Zen Kaku Gothic New", sans-serif;
+        background: var(--bg);
+        color: var(--ink);
+      }
+
+      .page { min-height: 100vh; padding: 32px 18px 80px; }
+      .container { max-width: 1080px; margin: 0 auto; display: grid; gap: 20px; }
+
+      .header {
+        display: flex; align-items: center; justify-content: space-between; gap: 16px;
+      }
+      .title { font-size: clamp(26px, 4vw, 38px); font-weight: 700; }
+      .badge { font-size: 11px; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+
+      .card {
+        background: var(--card);
+        border-radius: var(--radius);
+        box-shadow: var(--shadow);
+        padding: 18px;
+        border: 1px solid #f1f5f9;
+      }
+
+      .toprow { display: flex; align-items: center; justify-content: space-between; gap: 12px; flex-wrap: wrap; }
+      .legend { display: flex; gap: 12px; align-items: center; font-size: 12px; color: var(--muted); }
+      .legend span { display: inline-flex; align-items: center; gap: 6px; }
+      .dot { width: 10px; height: 10px; border-radius: 2px; }
+      .dot-danger { background: var(--danger); }
+      .dot-warn { background: var(--warn); }
+      .dot-done { background: var(--done); }
+
+      .filters { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+      .input, .select {
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 7px 10px;
+        font-size: 12px;
+        background: #fff;
+      }
+
+      table { width: 100%; border-collapse: collapse; }
+      thead th { font-size: 12px; color: var(--muted); padding: 10px 6px; border-bottom: 1px solid var(--line); }
+      tbody td { padding: 12px 6px; border-bottom: 1px solid #f3f4f6; font-size: 13px; }
+
+      .row-danger { background: var(--danger); }
+      .row-warn { background: var(--warn); }
+      .row-done { background: var(--done); color: #6b7280; }
+
+      .actions { display: inline-flex; gap: 8px; }
+      .btn { border: 1px solid var(--line); border-radius: 10px; padding: 6px 10px; font-size: 12px; background: #fff; }
+      .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; }
+      .btn-star { color: var(--accent-2); border-color: #dbeafe; }
+
+      .sort { font-size: 12px; color: var(--muted); text-align: right; }
+
+      @media (max-width: 720px) {
+        .header { flex-direction: column; align-items: flex-start; }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <div class="container">
+        <div class="header">
+          <div class="title">シンプルタスク管理</div>
+          <div class="badge">Vibe Coding</div>
+        </div>
+
+        <div class="card">
+          <div class="toprow">
+            <div class="legend">
+              <span><span class="dot dot-danger"></span>期日超過</span>
+              <span><span class="dot dot-warn"></span>3日前</span>
+              <span><span class="dot dot-done"></span>完了</span>
+            </div>
+            <div class="sort">並び順: 期日の昇順</div>
+          </div>
+
+          <div style="height: 10px"></div>
+
+          <div class="toprow">
+            <div class="filters">
+              <input class="input" placeholder="担当者でフィルタ" />
+              <select class="select"><option>担当者を選択</option></select>
+              <label class="legend"><input type="checkbox" />完了も読み込む</label>
+            </div>
+            <span class="badge">ダブルクリックで編集</span>
+          </div>
+
+          <div style="height: 12px"></div>
+
+          <table>
+            <thead>
+              <tr>
+                <th style="width: 20%">期日</th>
+                <th style="width: 45%">TODO名</th>
+                <th style="width: 20%">担当者</th>
+                <th style="width: 15%; text-align: right">操作</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>2026/01/23(金)</td>
+                <td>仕様書レビュー</td>
+                <td>Tanaka</td>
+                <td style="text-align: right"><button class="btn btn-primary">追加</button></td>
+              </tr>
+              <tr class="row-danger">
+                <td>2026/01/10(土)</td>
+                <td>UI調整</td>
+                <td>Sato</td>
+                <td style="text-align: right"><div class="actions"><button class="btn btn-star">★</button><button class="btn">完了</button><button class="btn">削除</button></div></td>
+              </tr>
+              <tr class="row-warn">
+                <td>2026/01/26(月)</td>
+                <td>API実装</td>
+                <td>Yamada</td>
+                <td style="text-align: right"><div class="actions"><button class="btn">☆</button><button class="btn">完了</button><button class="btn">削除</button></div></td>
+              </tr>
+              <tr>
+                <td>2026/02/03(火)</td>
+                <td>テスト追加</td>
+                <td>Tanaka</td>
+                <td style="text-align: right"><div class="actions"><button class="btn">☆</button><button class="btn">完了</button><button class="btn">削除</button></div></td>
+              </tr>
+              <tr class="row-done">
+                <td>2026/01/08(木)</td>
+                <td>ドキュメント更新</td>
+                <td>Suzuki</td>
+                <td style="text-align: right"><div class="actions"><button class="btn btn-star">★</button><button class="btn">完了取消</button><button class="btn">削除</button></div></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
