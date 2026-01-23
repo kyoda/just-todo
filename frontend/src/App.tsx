@@ -136,11 +136,13 @@ export default function App() {
         fetchAssignees(),
         fetchFavorites(),
       ]);
-      if (!res.ok) throw new Error("Failed to load todos");
+      if (!res.ok) throw new Error("Todoの取得に失敗しました。");
       const data: Todo[] = await res.json();
       setTodos(data);
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     } finally {
       setLoading(false);
     }
@@ -246,11 +248,13 @@ export default function App() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed to save todo");
+      if (!res.ok) throw new Error("Todoの保存に失敗しました。");
       resetForm();
       await fetchTodos();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     }
   };
 
@@ -260,10 +264,12 @@ export default function App() {
       const res = await fetch(`${API_URL}/todos/${todoId}`, {
         method: "DELETE",
       });
-      if (!res.ok) throw new Error("Failed to delete todo");
+      if (!res.ok) throw new Error("Todoの削除に失敗しました。");
       await fetchTodos();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     }
   };
 
@@ -281,10 +287,12 @@ export default function App() {
           favorite: todo.favorite,
         }),
       });
-      if (!res.ok) throw new Error("Failed to update todo");
+      if (!res.ok) throw new Error("Todoの更新に失敗しました。");
       await fetchTodos();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     }
   };
 
@@ -317,10 +325,12 @@ export default function App() {
           favorite: todo.favorite,
         }),
       });
-      if (!res.ok) throw new Error("Failed to update todo");
+      if (!res.ok) throw new Error("Todoの更新に失敗しました。");
       await fetchTodos();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     } finally {
       setSavingRowId(null);
     }
@@ -417,7 +427,7 @@ export default function App() {
         }),
       });
       if (!res.ok) {
-        let detail = "Failed to update todo";
+        let detail = "Todoの更新に失敗しました。";
         try {
           const data = await res.json();
           if (data?.detail) detail = data.detail;
@@ -431,7 +441,9 @@ export default function App() {
       );
       await fetchTodos();
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unexpected error");
+      setError(
+        err instanceof Error ? err.message : "予期しないエラーが発生しました。"
+      );
     }
   };
 
@@ -531,11 +543,6 @@ export default function App() {
                 {savingRowId !== null && (
                   <span className="text-xs text-slate-500">保存中...</span>
                 )}
-                {favoriteNotice && (
-                  <span className="text-xs text-emerald-600">
-                    {favoriteNotice}
-                  </span>
-                )}
                 <input
                   type="text"
                   value={assigneeFilter}
@@ -560,6 +567,18 @@ export default function App() {
                     <option key={name} value={name} />
                   ))}
                 </datalist>
+                <label className="ml-2 flex items-center gap-2 text-xs text-slate-600">
+                  <input
+                    type="checkbox"
+                    checked={showCompleted}
+                    onChange={(e) => setShowCompleted(e.target.checked)}
+                    className="app-checkbox h-4 w-4"
+                  />
+                  完了も読み込む
+                </label>
+              </div>
+              <div className="flex items-center gap-2">
+                <span className="text-xs text-slate-600">スタイル:</span>
                 <select
                   value={theme}
                   onChange={(e) => setTheme(e.target.value)}
@@ -571,22 +590,18 @@ export default function App() {
                   <option value="f">スカイ・グラス</option>
                   <option value="g">ブルータル・モノ</option>
                 </select>
-                <label className="ml-2 flex items-center gap-2 text-xs text-slate-600">
-                  <input
-                    type="checkbox"
-                    checked={showCompleted}
-                    onChange={(e) => setShowCompleted(e.target.checked)}
-                    className="app-checkbox h-4 w-4"
-                  />
-                  完了も読み込む
-                </label>
               </div>
             </div>
           </div>
 
-          {error && (
-            <p className="mt-3 text-sm text-red-600">{error}</p>
-          )}
+          <div className="mt-3 min-h-[24px] text-sm">
+            {favoriteNotice && (
+              <span className="text-emerald-600">{favoriteNotice}</span>
+            )}
+            {error && (
+              <span className="text-red-600">{error}</span>
+            )}
+          </div>
 
           <div className="mt-4 overflow-x-auto px-3">
             <table className="app-table min-w-full border-collapse text-left text-sm">
