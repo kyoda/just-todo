@@ -80,6 +80,7 @@ input, button, select {
 
 .app-dot-danger { background: var(--app-danger) !important; }
 .app-dot-warn { background: var(--app-warn) !important; }
+.app-dot-done { background: var(--app-done) !important; }
 
 .app-shell .text-slate-600,
 .app-shell .text-slate-500 {

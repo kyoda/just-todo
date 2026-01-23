@@ -513,6 +513,10 @@ export default function App() {
                     <span className="app-dot app-dot-warn inline-block h-3 w-3 rounded-sm bg-yellow-100" />
                     <span>3日前</span>
                   </div>
+                  <div className="flex items-center gap-2">
+                    <span className="app-dot app-dot-done inline-block h-3 w-3 rounded-sm bg-slate-200" />
+                    <span>完了</span>
+                  </div>
                 </div>
                 <p className="text-xs text-slate-500">
                   ダブルクリックで編集。入力後にフォーカスが外れると保存されます。
