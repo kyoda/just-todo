@@ -7,6 +7,7 @@ class TodoBase(BaseModel):
     title: str
     assignee: str
     completed: bool = False
+    favorite: bool = False
 
 
 class TodoCreate(TodoBase):

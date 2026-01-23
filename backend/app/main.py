@@ -24,6 +24,17 @@ def ensure_completed_column():
 ensure_completed_column()
 
 
+def ensure_favorite_column():
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("todos")}
+    if "favorite" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE todos ADD COLUMN favorite BOOLEAN DEFAULT 0"))
+
+
+ensure_favorite_column()
+
+
 def seed_todos():
     seed(42)
     with SessionLocal() as db:
@@ -48,6 +59,7 @@ def seed_todos():
                     title=f"{titles[i % len(titles)]} #{i + 1}",
                     assignee=assignees[i % len(assignees)],
                     completed=False,
+                    favorite=False,
                 )
             )
         db.add_all(todos)

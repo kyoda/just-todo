@@ -7,6 +7,7 @@ type Todo = {
   title: string;
   assignee: string;
   completed: boolean;
+  favorite: boolean;
 };
 
 type FormState = {
@@ -52,10 +53,15 @@ export default function App() {
     if (typeof window === "undefined") return false;
     return localStorage.getItem("showCompleted") === "true";
   });
+  const [favoriteTitlesByAssignee, setFavoriteTitlesByAssignee] = useState<
+    Record<string, string[]>
+  >({});
   const [holidays, setHolidays] = useState<Set<string>>(new Set());
   const [assigneeOptions, setAssigneeOptions] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const [favoriteNotice, setFavoriteNotice] = useState<string | null>(null);
+  const favoriteNoticeTimer = useRef<number | null>(null);
 
   const sortedLabel = useMemo(() => {
     const sortLabelMap: Record<string, string> = {
@@ -85,6 +91,34 @@ export default function App() {
     }
   };
 
+  const fetchFavorites = async () => {
+    try {
+      const params = new URLSearchParams({ sort: "title", order: "asc" });
+      const res = await fetch(`${API_URL}/todos?${params.toString()}`);
+      if (!res.ok) return;
+      const data: Todo[] = await res.json();
+      const map: Record<string, Set<string>> = {};
+      data.forEach((todo) => {
+        const title = todo.title.trim();
+        const assignee = todo.assignee.trim();
+        if (!todo.favorite || !title || !assignee) return;
+        if (!map[assignee]) {
+          map[assignee] = new Set<string>();
+        }
+        map[assignee].add(title);
+      });
+      const normalized: Record<string, string[]> = {};
+      Object.entries(map).forEach(([assignee, titles]) => {
+        normalized[assignee] = Array.from(titles).sort((a, b) =>
+          a.localeCompare(b)
+        );
+      });
+      setFavoriteTitlesByAssignee(normalized);
+    } catch {
+      // ignore favorites list failures
+    }
+  };
+
   const fetchTodos = async () => {
     setLoading(true);
     setError(null);
@@ -96,6 +130,7 @@ export default function App() {
       const [res] = await Promise.all([
         fetch(`${API_URL}/todos?${params.toString()}`),
         fetchAssignees(),
+        fetchFavorites(),
       ]);
       if (!res.ok) throw new Error("Failed to load todos");
       const data: Todo[] = await res.json();
@@ -141,6 +176,7 @@ export default function App() {
     localStorage.setItem("showCompleted", String(showCompleted));
   }, [showCompleted]);
 
+
   const resetForm = () => {
     setForm(emptyForm);
     setShowForm(false);
@@ -171,6 +207,22 @@ export default function App() {
     return `${year}-${month}-${day}`;
   };
 
+  const showFavoriteNotice = (message: string) => {
+    if (favoriteNoticeTimer.current) {
+      window.clearTimeout(favoriteNoticeTimer.current);
+    }
+    setFavoriteNotice(message);
+    favoriteNoticeTimer.current = window.setTimeout(() => {
+      setFavoriteNotice(null);
+      favoriteNoticeTimer.current = null;
+    }, 2000);
+  };
+
+  const favoritesForAssignee = (assignee: string) => {
+    const key = assignee.trim();
+    return key ? favoriteTitlesByAssignee[key] ?? [] : [];
+  };
+
   const holidayDates = useMemo(() => {
     return Array.from(holidays).map((date) => new Date(`${date}T00:00:00`));
   }, [holidays]);
@@ -179,7 +231,7 @@ export default function App() {
     e?.preventDefault();
     setError(null);
     try {
-      const payload = { ...form, completed: false };
+      const payload = { ...form, completed: false, favorite: false };
       const res = await fetch(`${API_URL}/todos`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -217,6 +269,7 @@ export default function App() {
           title: todo.title,
           assignee: todo.assignee,
           completed: !todo.completed,
+          favorite: todo.favorite,
         }),
       });
       if (!res.ok) throw new Error("Failed to update todo");
@@ -252,6 +305,7 @@ export default function App() {
           title: trimmedTitle,
           assignee: trimmedAssignee,
           completed: todo.completed,
+          favorite: todo.favorite,
         }),
       });
       if (!res.ok) throw new Error("Failed to update todo");
@@ -336,6 +390,40 @@ export default function App() {
         )}
       </div>
     );
+  };
+
+  const toggleFavorite = async (todo: Todo) => {
+    setError(null);
+    try {
+      const nextFavorite = !todo.favorite;
+      const res = await fetch(`${API_URL}/todos/${todo.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          due_date: todo.due_date,
+          title: todo.title,
+          assignee: todo.assignee,
+          completed: todo.completed,
+          favorite: nextFavorite,
+        }),
+      });
+      if (!res.ok) {
+        let detail = "Failed to update todo";
+        try {
+          const data = await res.json();
+          if (data?.detail) detail = data.detail;
+        } catch {
+          // ignore parse errors
+        }
+        throw new Error(detail);
+      }
+      showFavoriteNotice(
+        nextFavorite ? "お気に入り登録しました" : "お気に入り解除しました"
+      );
+      await fetchTodos();
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Unexpected error");
+    }
   };
 
   const toggleSort = (field: string) => {
@@ -429,6 +517,11 @@ export default function App() {
               <div className="flex items-center gap-2">
                 {savingRowId !== null && (
                   <span className="text-xs text-slate-500">保存中...</span>
+                )}
+                {favoriteNotice && (
+                  <span className="text-xs text-emerald-600">
+                    {favoriteNotice}
+                  </span>
                 )}
                 <input
                   type="text"
@@ -538,7 +631,30 @@ export default function App() {
                         required
                         className="w-full rounded border border-slate-300 px-3 py-2"
                         placeholder="例: 仕様書レビュー"
+                        list="favorite-title-options-add"
                       />
+                      <datalist id="favorite-title-options-add">
+                        {favoritesForAssignee(form.assignee).map((title) => (
+                          <option key={title} value={title} />
+                        ))}
+                      </datalist>
+                      {favoritesForAssignee(form.assignee).length > 0 && (
+                        <select
+                          value=""
+                          onChange={(e) => {
+                            if (!e.target.value) return;
+                            setForm({ ...form, title: e.target.value });
+                          }}
+                          className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                        >
+                          <option value="">お気に入りから選択</option>
+                          {favoritesForAssignee(form.assignee).map((title) => (
+                            <option key={title} value={title}>
+                              {title}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </td>
                     <td className="py-3 pr-4">
                       <input
@@ -603,21 +719,58 @@ export default function App() {
                     >
                       {editingRowId === todo.id &&
                       editingField === "title" ? (
-                        <input
-                          type="text"
-                          value={editDraft.title}
-                          onChange={(e) =>
-                            setEditDraft({ ...editDraft, title: e.target.value })
-                          }
-                          onBlur={() => saveInlineEdit(todo)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
+                        <div
+                          className="space-y-2"
+                          onBlur={(e) => {
+                            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                              saveInlineEdit(todo);
                             }
                           }}
-                          autoFocus
-                          className="w-full rounded border border-slate-300 px-2 py-1"
-                        />
+                        >
+                          <input
+                            type="text"
+                            value={editDraft.title}
+                            onChange={(e) =>
+                              setEditDraft({
+                                ...editDraft,
+                                title: e.target.value,
+                              })
+                            }
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            autoFocus
+                            className="w-full rounded border border-slate-300 px-2 py-1"
+                            list={`favorite-title-options-${todo.id}`}
+                          />
+                          <datalist id={`favorite-title-options-${todo.id}`}>
+                            {favoritesForAssignee(editDraft.assignee).map((title) => (
+                              <option key={title} value={title} />
+                            ))}
+                          </datalist>
+                          {favoritesForAssignee(editDraft.assignee).length > 0 && (
+                            <select
+                              value=""
+                              onChange={(e) => {
+                                if (!e.target.value) return;
+                                setEditDraft({
+                                  ...editDraft,
+                                  title: e.target.value,
+                                });
+                              }}
+                              className="w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                            >
+                              <option value="">お気に入りから選択</option>
+                              {favoritesForAssignee(editDraft.assignee).map((title) => (
+                                <option key={title} value={title}>
+                                  {title}
+                                </option>
+                              ))}
+                            </select>
+                          )}
+                        </div>
                       ) : (
                         todo.title
                       )}
@@ -653,6 +806,18 @@ export default function App() {
                     </td>
                     <td className={`py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
                       <div className="flex justify-end gap-2">
+                        <button
+                          className={`rounded border px-2 py-1 text-slate-700 ${
+                            todo.favorite
+                              ? "border-yellow-300 text-yellow-600"
+                              : "border-slate-300"
+                          }`}
+                          onClick={() => toggleFavorite(todo)}
+                          aria-label="お気に入りに登録"
+                          title="お気に入りに登録"
+                        >
+                          {todo.favorite ? "★" : "☆"}
+                        </button>
                         <button
                           className="rounded border border-emerald-300 px-2 py-1 text-emerald-700"
                           onClick={() => handleComplete(todo)}
