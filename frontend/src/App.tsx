@@ -509,7 +509,9 @@ export default function App() {
     <div className={`app-shell theme-${theme} min-h-screen px-6 py-10`}>
       <div className="mx-auto max-w-5xl space-y-8">
         <header className="space-y-2">
-          <h1 className="app-title text-3xl font-semibold">シンプルタスク管理</h1>
+          <h1 className="app-title text-3xl font-semibold">
+            シンプルタスク管理 <span className="text-slate-500">| just todo</span>
+          </h1>
         </header>
 
         <section className="app-card rounded-xl bg-white p-6 shadow">

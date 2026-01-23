@@ -1,4 +1,4 @@
-# just-todo
+# シンプルタスク管理 | just todo
 
 本プロジェクトはVibe Codingのスタイルで作成しました。
 
@@ -41,6 +41,9 @@ docker compose up -d
 ## 使い方
 - Frontend: http://localhost:5173
 - API (Swagger): http://localhost:8000/docs
+
+## スクリーンショット
+![just-todo screenshot](docs/screenshot.png)
 
 ## 環境変数
 - Frontend
