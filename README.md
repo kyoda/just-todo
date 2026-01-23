@@ -1,10 +1,13 @@
-# Todo App
+# シンプルタスク管理
 
-チーム向けのシンプルなTodoアプリ（React + FastAPI + SQLite3）。
+チーム向けのシンプルなタスク管理アプリ（React + FastAPI + SQLite3）。
 
 ## Features
 - Todo一覧表示 / 追加 / 更新 / 削除
 - ソート（id / due_date / title / assignee）
+- 担当者名でのフィルタ
+- 完了/完了取消（完了済みは一覧の最後に表示）
+- スクロールで自動表示（簡易インフィニットスクロール）
 - シングルページ構成（画面遷移なし）
 
 ## Tech Stack
@@ -48,7 +51,8 @@ docker compose up -d
 
 ## Development Notes
 - 初回起動時はイメージが自動的にビルドされます。
-- 依存関係を更新した場合は `docker compose up -d --build` を実行してください。
+- 依存関係やDockerfileを変更した場合は `docker compose build` を実行してください。
+- 初回起動時、DBが空ならダミーデータ100件が自動で投入されます。
 
 ## License
 - 未設定
