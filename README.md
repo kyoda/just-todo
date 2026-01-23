@@ -1,9 +1,9 @@
-# シンプルタスク管理
+# just-todo
 
 本プロジェクトはVibe Codingのスタイルで作成しました。
 
 ## 概要
-チーム向けのシンプルなタスク管理アプリ（React + FastAPI + SQLite3）。
+A minimal team Todo app with just the essentials.
 
 ## 特長
 - Todo一覧表示 / 追加 / 更新 / 削除
