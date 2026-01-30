@@ -296,16 +296,17 @@ export default function App() {
     }
   };
 
-  const saveInlineEdit = async (todo: Todo) => {
+  const saveInlineEdit = async (todo: Todo, draftOverride?: FormState) => {
     if (editingRowId !== todo.id) return;
-    const trimmedTitle = editDraft.title.trim();
-    const trimmedAssignee = editDraft.assignee.trim();
+    const draft = draftOverride ?? editDraft;
+    const trimmedTitle = draft.title.trim();
+    const trimmedAssignee = draft.assignee.trim();
     if (!trimmedTitle || !trimmedAssignee || !editDraft.due_date) {
       setError("期日・TODO名・担当者は必須です。");
       return;
     }
     const noChanges =
-      editDraft.due_date === todo.due_date &&
+      draft.due_date === todo.due_date &&
       trimmedTitle === todo.title &&
       trimmedAssignee === todo.assignee;
     setEditingRowId(null);
@@ -318,7 +319,7 @@ export default function App() {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          due_date: editDraft.due_date,
+          due_date: draft.due_date,
           title: trimmedTitle,
           assignee: trimmedAssignee,
           completed: todo.completed,
@@ -356,7 +357,7 @@ export default function App() {
   }: {
     value: string;
     onChange: (value: string) => void;
-    onCommit?: () => void;
+    onCommit?: (value: string) => void;
   }) => {
     const [open, setOpen] = useState(false);
     const wrapperRef = useRef<HTMLDivElement | null>(null);
@@ -390,9 +391,10 @@ export default function App() {
               selected={selected}
               onSelect={(date) => {
                 if (!date) return;
-                onChange(formatDateIso(date));
+                const nextValue = formatDateIso(date);
+                onChange(nextValue);
                 setOpen(false);
-                onCommit?.();
+                onCommit?.(nextValue);
               }}
               modifiers={{
                 holiday: holidayDates,
@@ -750,7 +752,9 @@ export default function App() {
                           onChange={(value) =>
                             setEditDraft({ ...editDraft, due_date: value })
                           }
-                          onCommit={() => saveInlineEdit(todo)}
+                          onCommit={(value) =>
+                            saveInlineEdit(todo, { ...editDraft, due_date: value })
+                          }
                         />
                       ) : (
                         formatDateWithWeekday(todo.due_date)
