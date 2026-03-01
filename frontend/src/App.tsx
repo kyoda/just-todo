@@ -72,6 +72,12 @@ export default function App() {
   const dateEditRef = useRef<HTMLDivElement | null>(null);
   const [favoriteNotice, setFavoriteNotice] = useState<string | null>(null);
   const favoriteNoticeTimer = useRef<number | null>(null);
+  const [notificationsEnabled, setNotificationsEnabled] = useState(false);
+  const [notificationAssignee, setNotificationAssignee] = useState(() => {
+    if (typeof window === "undefined") return "";
+    return localStorage.getItem("notificationAssignee") ?? "";
+  });
+  const notificationCheckTimer = useRef<number | null>(null);
 
   const autoResizeTextarea = (element: HTMLTextAreaElement | null) => {
     if (!element) return;
@@ -199,6 +205,87 @@ export default function App() {
     localStorage.setItem("uiTheme", theme);
   }, [theme]);
 
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    localStorage.setItem("notificationAssignee", notificationAssignee);
+  }, [notificationAssignee]);
+
+  // Register Service Worker and setup notifications
+  useEffect(() => {
+    if ('serviceWorker' in navigator && 'Notification' in window) {
+      navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+          console.log('Service Worker registered:', registration);
+        })
+        .catch(err => {
+          console.error('Service Worker registration failed:', err);
+        });
+    }
+  }, []);
+
+  // Request notification permission
+  const requestNotificationPermission = async () => {
+    if (!('Notification' in window)) {
+      alert('このブラウザは通知をサポートしていません');
+      return false;
+    }
+
+    if (Notification.permission === 'granted') {
+      setNotificationsEnabled(true);
+      return true;
+    }
+
+    if (Notification.permission !== 'denied') {
+      const permission = await Notification.requestPermission();
+      if (permission === 'granted') {
+        setNotificationsEnabled(true);
+        return true;
+      }
+    }
+
+    setNotificationsEnabled(false);
+    return false;
+  };
+
+  // Check todos and send notifications
+  const checkTodosForNotifications = async () => {
+    if (!notificationsEnabled || Notification.permission !== 'granted') return;
+    if (!navigator.serviceWorker.controller) return;
+    if (!notificationAssignee) return; // Only notify when notification assignee is set
+
+    const incompleteTodos = todos.filter(t => !t.completed && t.assignee === notificationAssignee);
+
+    navigator.serviceWorker.controller.postMessage({
+      type: 'CHECK_TODOS',
+      todos: incompleteTodos,
+      holidays: Array.from(holidays),
+      assignee: notificationAssignee
+    });
+  };
+
+  // Periodic notification check (every 30 minutes)
+  useEffect(() => {
+    if (!notificationsEnabled) return;
+
+    checkTodosForNotifications();
+
+    notificationCheckTimer.current = window.setInterval(() => {
+      checkTodosForNotifications();
+    }, 30 * 60 * 1000); // 30 minutes
+
+    return () => {
+      if (notificationCheckTimer.current) {
+        window.clearInterval(notificationCheckTimer.current);
+      }
+    };
+  }, [notificationsEnabled, todos, holidays, notificationAssignee]);
+
+  // Check notification permission on load
+  useEffect(() => {
+    if (Notification.permission === 'granted') {
+      setNotificationsEnabled(true);
+    }
+  }, []);
 
   const resetForm = () => {
     setForm(emptyForm);
@@ -631,6 +718,36 @@ export default function App() {
                   />
                   完了も読み込む
                 </label>
+                {!notificationsEnabled && (
+                  <button
+                    onClick={requestNotificationPermission}
+                    className="ml-2 rounded border border-slate-300 px-2 py-1 text-xs hover:bg-slate-50"
+                  >
+                    🔔 通知を有効にする
+                  </button>
+                )}
+                {notificationsEnabled && (
+                  <div className="ml-2 flex items-center gap-2">
+                    <label className="text-xs text-slate-600">通知対象:</label>
+                    <select
+                      value={notificationAssignee}
+                      onChange={(e) => setNotificationAssignee(e.target.value)}
+                      className="app-select rounded border border-slate-300 px-2 py-1 text-xs"
+                    >
+                      <option value="">選択してください</option>
+                      {assigneeOptions.map((name) => (
+                        <option key={name} value={name}>
+                          {name}
+                        </option>
+                      ))}
+                    </select>
+                    {notificationAssignee && (
+                      <span className="text-xs text-green-600">
+                        🔔 有効
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
               <div className="flex items-center gap-2">
                 <span className="text-xs text-slate-600">スタイル:</span>
