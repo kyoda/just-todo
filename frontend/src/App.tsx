@@ -485,19 +485,43 @@ export default function App() {
     [filteredTodos, visibleCount]
   );
 
+  const countBusinessDaysUntil = (dueDate: string): number => {
+    const due = new Date(`${dueDate}T00:00:00`);
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    
+    const diffMs = due.getTime() - today.getTime();
+    if (diffMs < 0) {
+      return -1; // 期日が過去
+    }
+    
+    let businessDays = 0;
+    let current = new Date(today);
+    
+    while (current.getTime() < due.getTime()) {
+      const dayOfWeek = current.getDay();
+      const dateStr = current.toISOString().split('T')[0];
+      
+      // 平日（月～金）で、祝日でない場合
+      if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.has(dateStr)) {
+        businessDays++;
+      }
+      
+      current.setDate(current.getDate() + 1);
+    }
+    
+    return businessDays;
+  };
+
   const getRowClass = (todo: Todo) => {
     if (todo.completed) {
       return "bg-slate-200 text-slate-600";
     }
-    const due = new Date(`${todo.due_date}T00:00:00`);
-    const now = new Date();
-    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    const diffMs = due.getTime() - today.getTime();
-    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    if (diffDays < 0) {
+    const businessDaysRemaining = countBusinessDaysUntil(todo.due_date);
+    if (businessDaysRemaining < 0) {
       return "bg-red-100";
     }
-    if (diffDays <= 3) {
+    if (businessDaysRemaining <= 2) {
       return "bg-yellow-100";
     }
     return "";
@@ -527,7 +551,7 @@ export default function App() {
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="app-dot app-dot-warn inline-block h-3 w-3 rounded-sm bg-yellow-100" />
-                    <span>3日前</span>
+                    <span>３営業日前</span>
                   </div>
                   <div className="flex items-center gap-2">
                     <span className="app-dot app-dot-done inline-block h-3 w-3 rounded-sm bg-slate-200" />
