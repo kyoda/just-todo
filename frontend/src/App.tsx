@@ -235,12 +235,16 @@ export default function App() {
       return true;
     }
 
-    if (Notification.permission !== 'denied') {
-      const permission = await Notification.requestPermission();
-      if (permission === 'granted') {
-        setNotificationsEnabled(true);
-        return true;
-      }
+    if (Notification.permission === 'denied') {
+      alert('通知が拒否されています。ブラウザの設定から通知を許可してください。\n\nEdge の場合：\n1. アドレスバーの左側のアイコンをクリック\n2. 「通知」の設定を確認');
+      return false;
+    }
+
+    // permission === 'default'
+    const permission = await Notification.requestPermission();
+    if (permission === 'granted') {
+      setNotificationsEnabled(true);
+      return true;
     }
 
     setNotificationsEnabled(false);
