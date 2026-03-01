@@ -676,7 +676,7 @@ export default function App() {
               </thead>
               <tbody>
                 <tr className="border-b border-slate-100">
-                    <td colSpan={5} className="py-3 pr-4">
+                  <td colSpan={5} className="py-3 pr-4">
                     <button
                       className="app-btn rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
