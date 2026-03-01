@@ -650,10 +650,12 @@ export default function App() {
                     <th
                       key={col.key}
                       className={`app-th py-3 pr-4 font-medium ${col.key === "title"
-                        ? "w-5/12"
+                        ? "w-[31%]"
                         : col.key === "memo"
-                          ? "w-2/12"
-                          : "w-2/12"
+                          ? "w-[20%]"
+                          : col.key === "assignee"
+                            ? "w-[11%]"
+                            : "w-[16%]"
                         }`}
                     >
                       <button
@@ -669,7 +671,7 @@ export default function App() {
                       </button>
                     </th>
                   ))}
-                  <th className="app-th w-1/12 py-3 pr-6 text-right font-medium">
+                  <th className="app-th w-[22%] py-3 pr-6 text-right font-medium">
                     操作
                   </th>
                 </tr>
@@ -695,7 +697,7 @@ export default function App() {
                 </tr>
                 {showForm && (
                   <tr className="border-b border-slate-100">
-                    <td className="w-2/12 py-3 pr-4 break-words">
+                    <td className="w-[16%] py-3 pr-4 break-words">
                       <DatePickerInput
                         value={form.due_date}
                         onChange={(value) =>
@@ -703,7 +705,7 @@ export default function App() {
                         }
                       />
                     </td>
-                    <td className="w-5/12 py-3 pr-4 break-words">
+                    <td className="w-[31%] py-3 pr-4 break-words">
                       <input
                         type="text"
                         value={form.title}
@@ -738,7 +740,7 @@ export default function App() {
                         </select>
                       )}
                     </td>
-                    <td className="w-2/12 py-3 pr-4 break-words">
+                    <td className="w-[20%] py-3 pr-4 break-words">
                       <input
                         type="text"
                         value={form.memo}
@@ -749,7 +751,7 @@ export default function App() {
                         placeholder="例: 要件確認済み"
                       />
                     </td>
-                    <td className="w-2/12 py-3 pr-4 break-words">
+                    <td className="w-[11%] py-3 pr-4 break-words overflow-hidden min-w-0">
                       <input
                         type="text"
                         value={form.assignee}
@@ -757,13 +759,13 @@ export default function App() {
                           setForm({ ...form, assignee: e.target.value })
                         }
                         required
-                        className="app-input w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        className="app-input w-full max-w-full box-border rounded border border-slate-300 px-3 py-2 text-sm"
                         placeholder="例: Tanaka"
                         list="assignee-options"
                       />
                     </td>
-                    <td className="py-3 pr-6 text-right">
-                      <div className="flex justify-end gap-2">
+                    <td className="w-[22%] py-3 pr-6 text-right overflow-hidden">
+                      <div className="flex flex-nowrap justify-end gap-2">
                         <button
                           type="button"
                           onClick={handleSubmit}
@@ -790,7 +792,7 @@ export default function App() {
                       className="border-b border-slate-100 last:border-0"
                     >
                       <td
-                        className={`app-td w-2/12 py-3 pr-4 pl-3 text-sm break-words ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-[16%] py-3 pr-4 pl-3 text-sm break-words ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                       >
                         {editingRowId === todo.id &&
@@ -809,7 +811,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td w-5/12 py-3 pr-4 break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-[31%] py-3 pr-4 break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "title")}
                       >
                         {editingRowId === todo.id &&
@@ -846,7 +848,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td w-2/12 py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-[20%] py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "memo")}
                       >
                         {editingRowId === todo.id &&
@@ -875,7 +877,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td w-2/12 py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-[11%] py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors overflow-hidden min-w-0`}
                         onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                       >
                         {editingRowId === todo.id &&
@@ -896,7 +898,7 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm"
+                            className="w-full max-w-full box-border px-2 py-2 border border-slate-400 bg-white font-sans text-sm"
                             style={{ minHeight: "40px" }}
                             list="assignee-options"
                           />
@@ -904,8 +906,8 @@ export default function App() {
                           todo.assignee
                         )}
                       </td>
-                      <td className={`app-td w-1/12 py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
-                        <div className="flex justify-end gap-2">
+                      <td className={`app-td w-[22%] py-3 pr-6 text-right ${rowBgClass} rounded-r overflow-hidden`}>
+                        <div className="flex flex-nowrap justify-end gap-2">
                           <button
                             className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${todo.favorite
                               ? "border-yellow-300 text-yellow-600"
