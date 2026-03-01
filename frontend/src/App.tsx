@@ -680,7 +680,12 @@ export default function App() {
                     <button
                       className="app-btn rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
-                        setForm(emptyForm);
+                        setForm({
+                          due_date: "",
+                          title: "",
+                          assignee: assigneeFilter,
+                          memo: "",
+                        });
                         setShowForm(true);
                       }}
                     >
