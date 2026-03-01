@@ -212,6 +212,19 @@ export default function App() {
 
   // Register Service Worker and setup notifications
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    // Check if HTTPS or localhost (required for Service Worker and Notifications)
+    const isSecureContext = window.location.protocol === 'https:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (!isSecureContext) {
+      console.warn('Service Worker and Notifications require HTTPS or localhost');
+      setNotificationsEnabled(false);
+      return;
+    }
+
     if ('serviceWorker' in navigator && 'Notification' in window) {
       navigator.serviceWorker.register('/sw.js')
         .then(registration => {
@@ -225,6 +238,16 @@ export default function App() {
 
   // Request notification permission
   const requestNotificationPermission = async () => {
+    // Check if HTTPS or localhost
+    const isSecureContext = window.location.protocol === 'https:' ||
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1';
+
+    if (!isSecureContext) {
+      alert('通知機能はHTTPS環境でのみ利用可能です。\n\nセキュアな環境（HTTPS）でアクセスしてください。');
+      return false;
+    }
+
     if (!('Notification' in window)) {
       alert('このブラウザは通知をサポートしていません');
       return false;
