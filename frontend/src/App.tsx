@@ -638,7 +638,7 @@ export default function App() {
           </div>
 
           <div className="mt-4 overflow-x-auto px-3">
-            <table className="app-table min-w-full border-collapse text-left text-sm">
+            <table className="app-table table-fixed w-full border-collapse text-left text-sm">
               <thead>
                 <tr className="app-thead border-b border-slate-200 text-slate-600">
                   {[
@@ -669,14 +669,14 @@ export default function App() {
                       </button>
                     </th>
                   ))}
-                  <th className="app-th py-3 pr-6 text-right font-medium">
+                  <th className="app-th w-1/12 py-3 pr-6 text-right font-medium">
                     操作
                   </th>
                 </tr>
               </thead>
               <tbody>
                 <tr className="border-b border-slate-100">
-                  <td colSpan={4} className="py-3 pr-4">
+                    <td colSpan={5} className="py-3 pr-4">
                     <button
                       className="app-btn rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
@@ -690,7 +690,7 @@ export default function App() {
                 </tr>
                 {showForm && (
                   <tr className="border-b border-slate-100">
-                    <td className="py-3 pr-4">
+                    <td className="w-2/12 py-3 pr-4 break-words">
                       <DatePickerInput
                         value={form.due_date}
                         onChange={(value) =>
@@ -698,7 +698,7 @@ export default function App() {
                         }
                       />
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="w-5/12 py-3 pr-4 break-words">
                       <input
                         type="text"
                         value={form.title}
@@ -733,7 +733,7 @@ export default function App() {
                         </select>
                       )}
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="w-2/12 py-3 pr-4 break-words">
                       <input
                         type="text"
                         value={form.memo}
@@ -744,7 +744,7 @@ export default function App() {
                         placeholder="例: 要件確認済み"
                       />
                     </td>
-                    <td className="py-3 pr-4">
+                    <td className="w-2/12 py-3 pr-4 break-words">
                       <input
                         type="text"
                         value={form.assignee}
@@ -785,7 +785,7 @@ export default function App() {
                       className="border-b border-slate-100 last:border-0"
                     >
                       <td
-                        className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-2/12 py-3 pr-4 pl-3 text-sm break-words ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                       >
                         {editingRowId === todo.id &&
@@ -804,21 +804,20 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-5/12 py-3 pr-4 break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "title")}
                       >
                         {editingRowId === todo.id &&
                           editingField === "title" ? (
                           <div
-                            className="space-y-2"
+                            className="w-full"
                             onBlur={(e) => {
                               if (!e.currentTarget.contains(e.relatedTarget as Node)) {
                                 saveInlineEdit(todo);
                               }
                             }}
                           >
-                            <input
-                              type="text"
+                            <textarea
                               value={editDraft.title}
                               onChange={(e) =>
                                 setEditDraft({
@@ -827,52 +826,27 @@ export default function App() {
                                 })
                               }
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") {
+                                if (e.key === "Enter" && e.ctrlKey) {
                                   e.currentTarget.blur();
                                 }
                               }}
                               autoFocus
-                              className="app-input w-full rounded border border-slate-300 px-2 py-1"
-                              list={`favorite-title-options-${todo.id}`}
+                              className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                              style={{ minHeight: "60px" }}
+                              rows={3}
                             />
-                            <datalist id={`favorite-title-options-${todo.id}`}>
-                              {favoritesForAssignee(editDraft.assignee).map((title) => (
-                                <option key={title} value={title} />
-                              ))}
-                            </datalist>
-                            {favoritesForAssignee(editDraft.assignee).length > 0 && (
-                              <select
-                                value=""
-                                onChange={(e) => {
-                                  if (!e.target.value) return;
-                                  setEditDraft({
-                                    ...editDraft,
-                                    title: e.target.value,
-                                  });
-                                }}
-                                className="app-select w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                              >
-                                <option value="">お気に入りから選択</option>
-                                {favoritesForAssignee(editDraft.assignee).map((title) => (
-                                  <option key={title} value={title}>
-                                    {title}
-                                  </option>
-                                ))}
-                              </select>
-                            )}
                           </div>
                         ) : (
                           todo.title
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 text-sm ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-2/12 py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "memo")}
                       >
                         {editingRowId === todo.id &&
                           editingField === "memo" ? (
-                          <input
-                            type="text"
+                          <textarea
                             value={editDraft.memo}
                             onChange={(e) =>
                               setEditDraft({
@@ -882,19 +856,21 @@ export default function App() {
                             }
                             onBlur={() => saveInlineEdit(todo)}
                             onKeyDown={(e) => {
-                              if (e.key === "Enter") {
+                              if (e.key === "Enter" && e.ctrlKey) {
                                 e.currentTarget.blur();
                               }
                             }}
                             autoFocus
-                            className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                            className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                            style={{ minHeight: "60px" }}
+                            rows={3}
                           />
                         ) : (
                           todo.memo
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 text-sm ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
+                        className={`app-td w-2/12 py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                       >
                         {editingRowId === todo.id &&
@@ -915,14 +891,15 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                            className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm"
+                            style={{ minHeight: "40px" }}
                             list="assignee-options"
                           />
                         ) : (
                           todo.assignee
                         )}
                       </td>
-                      <td className={`app-td py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
+                      <td className={`app-td w-1/12 py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
                         <div className="flex justify-end gap-2">
                           <button
                             className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${todo.favorite
