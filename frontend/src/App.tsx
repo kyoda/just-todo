@@ -69,6 +69,7 @@ export default function App() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const addTitleRef = useRef<HTMLTextAreaElement | null>(null);
   const addMemoRef = useRef<HTMLTextAreaElement | null>(null);
+  const dateEditRef = useRef<HTMLDivElement | null>(null);
   const [favoriteNotice, setFavoriteNotice] = useState<string | null>(null);
   const favoriteNoticeTimer = useRef<number | null>(null);
 
@@ -364,6 +365,12 @@ export default function App() {
     });
   };
 
+  useEffect(() => {
+    if (editingField === "due_date" && dateEditRef.current) {
+      dateEditRef.current.focus();
+    }
+  }, [editingField, editingRowId]);
+
   const DatePickerInput = ({
     value,
     onChange,
@@ -395,7 +402,7 @@ export default function App() {
           readOnly
           value={value ? formatDateSlash(value) : ""}
           onClick={() => setOpen((prev) => !prev)}
-          className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
+          className="app-input w-full rounded border border-slate-300 px-2 py-2 text-sm leading-6 box-border"
           placeholder="YYYY/MM/DD"
         />
         {open && (
@@ -663,7 +670,7 @@ export default function App() {
                   ].map((col) => (
                     <th
                       key={col.key}
-                      className={`app-th py-3 pr-4 font-medium ${col.key === "title"
+                      className={`app-th py-3 px-2 font-medium ${col.key === "title"
                         ? "w-[31%]"
                         : col.key === "memo"
                           ? "w-[20%]"
@@ -692,7 +699,7 @@ export default function App() {
               </thead>
               <tbody>
                 <tr className="border-b border-slate-100">
-                  <td colSpan={5} className="py-3 pr-4">
+                  <td colSpan={5} className="py-3 px-2">
                     <button
                       className="app-btn rounded border border-slate-300 px-3 py-1 text-sm"
                       onClick={() => {
@@ -711,7 +718,7 @@ export default function App() {
                 </tr>
                 {showForm && (
                   <tr className="border-b border-slate-100">
-                    <td className="w-[16%] py-3 pr-4 break-words">
+                    <td className="w-[16%] py-3 px-2 break-words">
                       <DatePickerInput
                         value={form.due_date}
                         onChange={(value) =>
@@ -719,34 +726,42 @@ export default function App() {
                         }
                       />
                     </td>
-                    <td className="w-[31%] py-3 pr-4 break-words">
-                      <textarea
-                        ref={addTitleRef}
-                        value={form.title}
-                        onChange={(e) => {
-                          setForm({ ...form, title: e.target.value });
-                          autoResizeTextarea(e.currentTarget);
-                        }}
-                        required
-                        className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
-                        rows={1}
-                        placeholder="例: 仕様書レビュー"
-                      />
+                    <td className="w-[31%] py-3 px-2 break-words">
+                      <div className="w-full">
+                        <textarea
+                          ref={(el) => {
+                            if (el) autoResizeTextarea(el);
+                          }}
+                          value={form.title}
+                          onChange={(e) => {
+                            setForm({ ...form, title: e.target.value });
+                            autoResizeTextarea(e.currentTarget);
+                          }}
+                          required
+                          className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none leading-6 box-border"
+                          rows={1}
+                          placeholder="例: 仕様書レビュー"
+                        />
+                      </div>
                     </td>
-                    <td className="w-[20%] py-3 pr-4 break-words">
-                      <textarea
-                        ref={addMemoRef}
-                        value={form.memo}
-                        onChange={(e) => {
-                          setForm({ ...form, memo: e.target.value });
-                          autoResizeTextarea(e.currentTarget);
-                        }}
-                        className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
-                        rows={1}
-                        placeholder="例: 要件確認済み"
-                      />
+                    <td className="w-[20%] py-3 px-2 break-words">
+                      <div className="w-full">
+                        <textarea
+                          ref={(el) => {
+                            if (el) autoResizeTextarea(el);
+                          }}
+                          value={form.memo}
+                          onChange={(e) => {
+                            setForm({ ...form, memo: e.target.value });
+                            autoResizeTextarea(e.currentTarget);
+                          }}
+                          className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none leading-6 box-border"
+                          rows={1}
+                          placeholder="例: 要件確認済み"
+                        />
+                      </div>
                     </td>
-                    <td className="w-[11%] py-3 pr-4 break-words overflow-hidden min-w-0">
+                    <td className="w-[11%] py-3 px-2 break-words overflow-hidden min-w-0">
                       <input
                         type="text"
                         value={form.assignee}
@@ -787,26 +802,36 @@ export default function App() {
                       className="border-b border-slate-100 last:border-0"
                     >
                       <td
-                        className={`app-td w-[16%] py-3 pr-4 pl-3 text-sm break-words ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
+                        className={`app-td w-[16%] py-3 px-2 text-sm break-words ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                       >
                         {editingRowId === todo.id &&
                           editingField === "due_date" ? (
-                          <DatePickerInput
-                            value={editDraft.due_date}
-                            onChange={(value) =>
-                              setEditDraft({ ...editDraft, due_date: value })
-                            }
-                            onCommit={(value) =>
-                              saveInlineEdit(todo, { ...editDraft, due_date: value })
-                            }
-                          />
+                          <div
+                            ref={dateEditRef}
+                            tabIndex={0}
+                            onBlur={(e) => {
+                              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                                saveInlineEdit(todo);
+                              }
+                            }}
+                          >
+                            <DatePickerInput
+                              value={editDraft.due_date}
+                              onChange={(value) =>
+                                setEditDraft({ ...editDraft, due_date: value })
+                              }
+                              onCommit={(value) =>
+                                saveInlineEdit(todo, { ...editDraft, due_date: value })
+                              }
+                            />
+                          </div>
                         ) : (
-                          formatDateWithWeekday(todo.due_date)
+                          <div className="px-2 py-2 leading-6 border border-transparent box-border">{formatDateWithWeekday(todo.due_date)}</div>
                         )}
                       </td>
                       <td
-                        className={`app-td w-[31%] py-3 pr-4 break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
+                        className={`app-td w-[31%] py-3 px-2 break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors group`}
                         onDoubleClick={() => beginFieldEdit(todo, "title")}
                       >
                         {editingRowId === todo.id &&
@@ -820,6 +845,9 @@ export default function App() {
                             }}
                           >
                             <textarea
+                              ref={(el) => {
+                                if (el) autoResizeTextarea(el);
+                              }}
                               value={editDraft.title}
                               onChange={(e) => {
                                 setEditDraft({
@@ -835,46 +863,51 @@ export default function App() {
                                 }
                               }}
                               autoFocus
-                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 bg-white font-sans text-sm resize-none transition-colors leading-6 box-border"
                               rows={1}
                             />
                           </div>
                         ) : (
-                          todo.title
+                          <div className="px-2 py-2 leading-6 border border-transparent box-border">{todo.title}</div>
                         )}
                       </td>
                       <td
-                        className={`app-td w-[20%] py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors`}
+                        className={`app-td w-[20%] py-3 px-2 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors group`}
                         onDoubleClick={() => beginFieldEdit(todo, "memo")}
                       >
                         {editingRowId === todo.id &&
                           editingField === "memo" ? (
-                          <textarea
-                            value={editDraft.memo}
-                            onChange={(e) => {
-                              setEditDraft({
-                                ...editDraft,
-                                memo: e.target.value,
-                              });
-                              autoResizeTextarea(e.currentTarget);
-                            }}
-                            onFocus={(e) => autoResizeTextarea(e.currentTarget)}
-                            onBlur={() => saveInlineEdit(todo)}
-                            onKeyDown={(e) => {
-                              if (e.key === "Enter" && e.ctrlKey) {
-                                e.currentTarget.blur();
-                              }
-                            }}
-                            autoFocus
-                            className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
-                            rows={1}
-                          />
+                          <div className="w-full">
+                            <textarea
+                              ref={(el) => {
+                                if (el) autoResizeTextarea(el);
+                              }}
+                              value={editDraft.memo}
+                              onChange={(e) => {
+                                setEditDraft({
+                                  ...editDraft,
+                                  memo: e.target.value,
+                                });
+                                autoResizeTextarea(e.currentTarget);
+                              }}
+                              onFocus={(e) => autoResizeTextarea(e.currentTarget)}
+                              onBlur={() => saveInlineEdit(todo)}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter" && e.ctrlKey) {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                              autoFocus
+                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 bg-white font-sans text-sm resize-none transition-colors leading-6 box-border"
+                              rows={1}
+                            />
+                          </div>
                         ) : (
-                          todo.memo
+                          <div className="px-2 py-2 leading-6 border border-transparent box-border">{todo.memo}</div>
                         )}
                       </td>
                       <td
-                        className={`app-td w-[11%] py-3 pr-4 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors overflow-hidden min-w-0`}
+                        className={`app-td w-[11%] py-3 px-2 text-sm break-words ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:ring-1 hover:ring-inset hover:ring-slate-300 transition-colors overflow-hidden min-w-0`}
                         onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                       >
                         {editingRowId === todo.id &&
@@ -895,12 +928,11 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="w-full max-w-full box-border px-2 py-2 border border-slate-400 bg-white font-sans text-sm"
-                            style={{ minHeight: "40px" }}
+                            className="w-full max-w-full box-border px-2 py-2 border border-slate-400 bg-white font-sans text-sm leading-6"
                             list="assignee-options"
                           />
                         ) : (
-                          todo.assignee
+                          <div className="px-2 py-2 leading-6 border border-transparent box-border">{todo.assignee}</div>
                         )}
                       </td>
                       <td className={`app-td w-[22%] py-3 pr-6 text-right ${rowBgClass} rounded-r overflow-hidden`}>
