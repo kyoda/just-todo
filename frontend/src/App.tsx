@@ -685,13 +685,6 @@ export default function App() {
                 {savingRowId !== null && (
                   <span className="text-xs text-slate-500">保存中...</span>
                 )}
-                <input
-                  type="text"
-                  value={assigneeFilter}
-                  onChange={(e) => setAssigneeFilter(e.target.value)}
-                  className="app-input rounded border border-slate-300 px-3 py-1 text-sm"
-                  placeholder="担当者でフィルタ"
-                />
                 <select
                   value={assigneeFilter}
                   onChange={(e) => setAssigneeFilter(e.target.value)}
