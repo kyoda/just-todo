@@ -67,8 +67,16 @@ export default function App() {
   const [assigneeOptions, setAssigneeOptions] = useState<string[]>([]);
   const [visibleCount, setVisibleCount] = useState(20);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const addTitleRef = useRef<HTMLTextAreaElement | null>(null);
+  const addMemoRef = useRef<HTMLTextAreaElement | null>(null);
   const [favoriteNotice, setFavoriteNotice] = useState<string | null>(null);
   const favoriteNoticeTimer = useRef<number | null>(null);
+
+  const autoResizeTextarea = (element: HTMLTextAreaElement | null) => {
+    if (!element) return;
+    element.style.height = "0px";
+    element.style.height = `${element.scrollHeight}px`;
+  };
 
   const sortedLabel = useMemo(() => {
     const sortLabelMap: Record<string, string> = {
@@ -537,6 +545,12 @@ export default function App() {
     fetchAssignees();
   }, []);
 
+  useEffect(() => {
+    if (!showForm) return;
+    autoResizeTextarea(addTitleRef.current);
+    autoResizeTextarea(addMemoRef.current);
+  }, [showForm, form.title, form.memo]);
+
   return (
     <div className={`app-shell theme-${theme} min-h-screen px-6 py-10`}>
       <div className="mx-auto max-w-5xl space-y-8">
@@ -706,48 +720,29 @@ export default function App() {
                       />
                     </td>
                     <td className="w-[31%] py-3 pr-4 break-words">
-                      <input
-                        type="text"
+                      <textarea
+                        ref={addTitleRef}
                         value={form.title}
-                        onChange={(e) =>
-                          setForm({ ...form, title: e.target.value })
-                        }
+                        onChange={(e) => {
+                          setForm({ ...form, title: e.target.value });
+                          autoResizeTextarea(e.currentTarget);
+                        }}
                         required
-                        className="app-input w-full rounded border border-slate-300 px-3 py-2"
+                        className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                        rows={1}
                         placeholder="例: 仕様書レビュー"
-                        list="favorite-title-options-add"
                       />
-                      <datalist id="favorite-title-options-add">
-                        {favoritesForAssignee(form.assignee).map((title) => (
-                          <option key={title} value={title} />
-                        ))}
-                      </datalist>
-                      {favoritesForAssignee(form.assignee).length > 0 && (
-                        <select
-                          value=""
-                          onChange={(e) => {
-                            if (!e.target.value) return;
-                            setForm({ ...form, title: e.target.value });
-                          }}
-                          className="app-select mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                        >
-                          <option value="">お気に入りから選択</option>
-                          {favoritesForAssignee(form.assignee).map((title) => (
-                            <option key={title} value={title}>
-                              {title}
-                            </option>
-                          ))}
-                        </select>
-                      )}
                     </td>
                     <td className="w-[20%] py-3 pr-4 break-words">
-                      <input
-                        type="text"
+                      <textarea
+                        ref={addMemoRef}
                         value={form.memo}
-                        onChange={(e) =>
-                          setForm({ ...form, memo: e.target.value })
-                        }
-                        className="app-input w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        onChange={(e) => {
+                          setForm({ ...form, memo: e.target.value });
+                          autoResizeTextarea(e.currentTarget);
+                        }}
+                        className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                        rows={1}
                         placeholder="例: 要件確認済み"
                       />
                     </td>
@@ -826,21 +821,22 @@ export default function App() {
                           >
                             <textarea
                               value={editDraft.title}
-                              onChange={(e) =>
+                              onChange={(e) => {
                                 setEditDraft({
                                   ...editDraft,
                                   title: e.target.value,
-                                })
-                              }
+                                });
+                                autoResizeTextarea(e.currentTarget);
+                              }}
+                              onFocus={(e) => autoResizeTextarea(e.currentTarget)}
                               onKeyDown={(e) => {
                                 if (e.key === "Enter" && e.ctrlKey) {
                                   e.currentTarget.blur();
                                 }
                               }}
                               autoFocus
-                              className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
-                              style={{ minHeight: "60px" }}
-                              rows={3}
+                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                              rows={1}
                             />
                           </div>
                         ) : (
@@ -855,12 +851,14 @@ export default function App() {
                           editingField === "memo" ? (
                           <textarea
                             value={editDraft.memo}
-                            onChange={(e) =>
+                            onChange={(e) => {
                               setEditDraft({
                                 ...editDraft,
                                 memo: e.target.value,
-                              })
-                            }
+                              });
+                              autoResizeTextarea(e.currentTarget);
+                            }}
+                            onFocus={(e) => autoResizeTextarea(e.currentTarget)}
                             onBlur={() => saveInlineEdit(todo)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter" && e.ctrlKey) {
@@ -868,9 +866,8 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="w-full px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
-                            style={{ minHeight: "60px" }}
-                            rows={3}
+                            className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none"
+                            rows={1}
                           />
                         ) : (
                           todo.memo
