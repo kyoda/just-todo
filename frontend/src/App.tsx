@@ -650,8 +650,8 @@ export default function App() {
                     <th
                       key={col.key}
                       className={`app-th py-3 pr-4 font-medium ${col.key === "title"
-                          ? "w-5/12"
-                          : col.key === "memo"
+                        ? "w-5/12"
+                        : col.key === "memo"
                           ? "w-2/12"
                           : "w-2/12"
                         }`}
@@ -926,8 +926,8 @@ export default function App() {
                         <div className="flex justify-end gap-2">
                           <button
                             className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${todo.favorite
-                                ? "border-yellow-300 text-yellow-600"
-                                : "border-slate-300"
+                              ? "border-yellow-300 text-yellow-600"
+                              : "border-slate-300"
                               }`}
                             onClick={() => toggleFavorite(todo)}
                             aria-label="お気に入りに登録"

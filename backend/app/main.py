@@ -18,7 +18,8 @@ def ensure_completed_column():
     columns = {col["name"] for col in inspector.get_columns("todos")}
     if "completed" not in columns:
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE todos ADD COLUMN completed BOOLEAN DEFAULT 0"))
+            conn.execute(
+                text("ALTER TABLE todos ADD COLUMN completed BOOLEAN DEFAULT 0"))
 
 
 ensure_completed_column()
@@ -29,7 +30,8 @@ def ensure_favorite_column():
     columns = {col["name"] for col in inspector.get_columns("todos")}
     if "favorite" not in columns:
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE todos ADD COLUMN favorite BOOLEAN DEFAULT 0"))
+            conn.execute(
+                text("ALTER TABLE todos ADD COLUMN favorite BOOLEAN DEFAULT 0"))
 
 
 ensure_favorite_column()
@@ -40,7 +42,8 @@ def ensure_memo_column():
     columns = {col["name"] for col in inspector.get_columns("todos")}
     if "memo" not in columns:
         with engine.begin() as conn:
-            conn.execute(text("ALTER TABLE todos ADD COLUMN memo VARCHAR(500) DEFAULT ''"))
+            conn.execute(
+                text("ALTER TABLE todos ADD COLUMN memo VARCHAR(500) DEFAULT ''"))
 
 
 ensure_memo_column()
