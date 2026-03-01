@@ -785,7 +785,7 @@ export default function App() {
                       className="border-b border-slate-100 last:border-0"
                     >
                       <td
-                        className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
+                        className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "due_date")}
                       >
                         {editingRowId === todo.id &&
@@ -804,7 +804,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 ${rowBgClass}`}
+                        className={`app-td py-3 pr-4 ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "title")}
                       >
                         {editingRowId === todo.id &&
@@ -866,7 +866,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
+                        className={`app-td py-3 pr-4 text-sm ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "memo")}
                       >
                         {editingRowId === todo.id &&
@@ -894,7 +894,7 @@ export default function App() {
                         )}
                       </td>
                       <td
-                        className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
+                        className={`app-td py-3 pr-4 text-sm ${rowBgClass} cursor-pointer hover:bg-slate-100 hover:outline hover:outline-1 hover:outline-slate-300 transition-colors`}
                         onDoubleClick={() => beginFieldEdit(todo, "assignee")}
                       >
                         {editingRowId === todo.id &&
