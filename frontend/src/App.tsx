@@ -6,6 +6,7 @@ type Todo = {
   due_date: string;
   title: string;
   assignee: string;
+  memo: string;
   completed: boolean;
   favorite: boolean;
 };
@@ -14,6 +15,7 @@ type FormState = {
   due_date: string;
   title: string;
   assignee: string;
+  memo: string;
 };
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8000";
@@ -22,6 +24,7 @@ const emptyForm: FormState = {
   due_date: "",
   title: "",
   assignee: "",
+  memo: "",
 };
 
 export default function App() {
@@ -30,7 +33,7 @@ export default function App() {
   const [showForm, setShowForm] = useState(false);
   const [editingRowId, setEditingRowId] = useState<number | null>(null);
   const [editingField, setEditingField] = useState<
-    "due_date" | "title" | "assignee" | null
+    "due_date" | "title" | "memo" | "assignee" | null
   >(null);
   const [editDraft, setEditDraft] = useState<FormState>(emptyForm);
   const [savingRowId, setSavingRowId] = useState<number | null>(null);
@@ -308,7 +311,8 @@ export default function App() {
     const noChanges =
       draft.due_date === todo.due_date &&
       trimmedTitle === todo.title &&
-      trimmedAssignee === todo.assignee;
+      trimmedAssignee === todo.assignee &&
+      draft.memo === todo.memo;
     setEditingRowId(null);
     setEditingField(null);
     if (noChanges) return;
@@ -322,6 +326,7 @@ export default function App() {
           due_date: draft.due_date,
           title: trimmedTitle,
           assignee: trimmedAssignee,
+          memo: draft.memo,
           completed: todo.completed,
           favorite: todo.favorite,
         }),
@@ -339,7 +344,7 @@ export default function App() {
 
   const beginFieldEdit = (
     todo: Todo,
-    field: "due_date" | "title" | "assignee"
+    field: "due_date" | "title" | "memo" | "assignee"
   ) => {
     setEditingRowId(todo.id);
     setEditingField(field);
@@ -347,6 +352,7 @@ export default function App() {
       due_date: todo.due_date,
       title: todo.title,
       assignee: todo.assignee,
+      memo: todo.memo,
     });
   };
 
@@ -489,27 +495,27 @@ export default function App() {
     const due = new Date(`${dueDate}T00:00:00`);
     const now = new Date();
     const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-    
+
     const diffMs = due.getTime() - today.getTime();
     if (diffMs < 0) {
       return -1; // 期日が過去
     }
-    
+
     let businessDays = 0;
     let current = new Date(today);
-    
+
     while (current.getTime() < due.getTime()) {
       const dayOfWeek = current.getDay();
       const dateStr = current.toISOString().split('T')[0];
-      
+
       // 平日（月～金）で、祝日でない場合
       if (dayOfWeek !== 0 && dayOfWeek !== 6 && !holidays.has(dateStr)) {
         businessDays++;
       }
-      
+
       current.setDate(current.getDate() + 1);
     }
-    
+
     return businessDays;
   };
 
@@ -638,15 +644,17 @@ export default function App() {
                   {[
                     { key: "due_date", label: "期日" },
                     { key: "title", label: "TODO名" },
+                    { key: "memo", label: "備考" },
                     { key: "assignee", label: "担当者" },
                   ].map((col) => (
                     <th
                       key={col.key}
-                      className={`app-th py-3 pr-4 font-medium ${
-                        col.key === "title"
-                          ? "w-6/12"
+                      className={`app-th py-3 pr-4 font-medium ${col.key === "title"
+                          ? "w-5/12"
+                          : col.key === "memo"
+                          ? "w-2/12"
                           : "w-2/12"
-                      }`}
+                        }`}
                     >
                       <button
                         className="app-sort-btn flex items-center gap-1 hover:text-slate-900"
@@ -728,6 +736,17 @@ export default function App() {
                     <td className="py-3 pr-4">
                       <input
                         type="text"
+                        value={form.memo}
+                        onChange={(e) =>
+                          setForm({ ...form, memo: e.target.value })
+                        }
+                        className="app-input w-full rounded border border-slate-300 px-3 py-2 text-sm"
+                        placeholder="例: 要件確認済み"
+                      />
+                    </td>
+                    <td className="py-3 pr-4">
+                      <input
+                        type="text"
                         value={form.assignee}
                         onChange={(e) =>
                           setForm({ ...form, assignee: e.target.value })
@@ -761,149 +780,176 @@ export default function App() {
                 {visibleTodos.map((todo) => {
                   const rowBgClass = getRowClass(todo);
                   return (
-                  <tr
-                    key={todo.id}
-                    className="border-b border-slate-100 last:border-0"
-                  >
-                    <td
-                      className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
-                      onDoubleClick={() => beginFieldEdit(todo, "due_date")}
+                    <tr
+                      key={todo.id}
+                      className="border-b border-slate-100 last:border-0"
                     >
-                      {editingRowId === todo.id &&
-                      editingField === "due_date" ? (
-                        <DatePickerInput
-                          value={editDraft.due_date}
-                          onChange={(value) =>
-                            setEditDraft({ ...editDraft, due_date: value })
-                          }
-                          onCommit={(value) =>
-                            saveInlineEdit(todo, { ...editDraft, due_date: value })
-                          }
-                        />
-                      ) : (
-                        formatDateWithWeekday(todo.due_date)
-                      )}
-                    </td>
-                    <td
-                      className={`app-td py-3 pr-4 ${rowBgClass}`}
-                      onDoubleClick={() => beginFieldEdit(todo, "title")}
-                    >
-                      {editingRowId === todo.id &&
-                      editingField === "title" ? (
-                        <div
-                          className="space-y-2"
-                          onBlur={(e) => {
-                            if (!e.currentTarget.contains(e.relatedTarget as Node)) {
-                              saveInlineEdit(todo);
+                      <td
+                        className={`app-td py-3 pr-4 pl-3 text-sm ${rowBgClass} rounded-l`}
+                        onDoubleClick={() => beginFieldEdit(todo, "due_date")}
+                      >
+                        {editingRowId === todo.id &&
+                          editingField === "due_date" ? (
+                          <DatePickerInput
+                            value={editDraft.due_date}
+                            onChange={(value) =>
+                              setEditDraft({ ...editDraft, due_date: value })
                             }
-                          }}
-                        >
+                            onCommit={(value) =>
+                              saveInlineEdit(todo, { ...editDraft, due_date: value })
+                            }
+                          />
+                        ) : (
+                          formatDateWithWeekday(todo.due_date)
+                        )}
+                      </td>
+                      <td
+                        className={`app-td py-3 pr-4 ${rowBgClass}`}
+                        onDoubleClick={() => beginFieldEdit(todo, "title")}
+                      >
+                        {editingRowId === todo.id &&
+                          editingField === "title" ? (
+                          <div
+                            className="space-y-2"
+                            onBlur={(e) => {
+                              if (!e.currentTarget.contains(e.relatedTarget as Node)) {
+                                saveInlineEdit(todo);
+                              }
+                            }}
+                          >
+                            <input
+                              type="text"
+                              value={editDraft.title}
+                              onChange={(e) =>
+                                setEditDraft({
+                                  ...editDraft,
+                                  title: e.target.value,
+                                })
+                              }
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") {
+                                  e.currentTarget.blur();
+                                }
+                              }}
+                              autoFocus
+                              className="app-input w-full rounded border border-slate-300 px-2 py-1"
+                              list={`favorite-title-options-${todo.id}`}
+                            />
+                            <datalist id={`favorite-title-options-${todo.id}`}>
+                              {favoritesForAssignee(editDraft.assignee).map((title) => (
+                                <option key={title} value={title} />
+                              ))}
+                            </datalist>
+                            {favoritesForAssignee(editDraft.assignee).length > 0 && (
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  if (!e.target.value) return;
+                                  setEditDraft({
+                                    ...editDraft,
+                                    title: e.target.value,
+                                  });
+                                }}
+                                className="app-select w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                              >
+                                <option value="">お気に入りから選択</option>
+                                {favoritesForAssignee(editDraft.assignee).map((title) => (
+                                  <option key={title} value={title}>
+                                    {title}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
+                          </div>
+                        ) : (
+                          todo.title
+                        )}
+                      </td>
+                      <td
+                        className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
+                        onDoubleClick={() => beginFieldEdit(todo, "memo")}
+                      >
+                        {editingRowId === todo.id &&
+                          editingField === "memo" ? (
                           <input
                             type="text"
-                            value={editDraft.title}
+                            value={editDraft.memo}
                             onChange={(e) =>
                               setEditDraft({
                                 ...editDraft,
-                                title: e.target.value,
+                                memo: e.target.value,
                               })
                             }
+                            onBlur={() => saveInlineEdit(todo)}
                             onKeyDown={(e) => {
                               if (e.key === "Enter") {
                                 e.currentTarget.blur();
                               }
                             }}
                             autoFocus
-                            className="app-input w-full rounded border border-slate-300 px-2 py-1"
-                            list={`favorite-title-options-${todo.id}`}
+                            className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
                           />
-                          <datalist id={`favorite-title-options-${todo.id}`}>
-                            {favoritesForAssignee(editDraft.assignee).map((title) => (
-                              <option key={title} value={title} />
-                            ))}
-                          </datalist>
-                          {favoritesForAssignee(editDraft.assignee).length > 0 && (
-                            <select
-                              value=""
-                              onChange={(e) => {
-                                if (!e.target.value) return;
-                                setEditDraft({
-                                  ...editDraft,
-                                  title: e.target.value,
-                                });
-                              }}
-                              className="app-select w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                            >
-                              <option value="">お気に入りから選択</option>
-                              {favoritesForAssignee(editDraft.assignee).map((title) => (
-                                <option key={title} value={title}>
-                                  {title}
-                                </option>
-                              ))}
-                            </select>
-                          )}
-                        </div>
-                      ) : (
-                        todo.title
-                      )}
-                    </td>
-                    <td
-                      className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
-                      onDoubleClick={() => beginFieldEdit(todo, "assignee")}
-                    >
-                      {editingRowId === todo.id &&
-                      editingField === "assignee" ? (
-                        <input
-                          type="text"
-                          value={editDraft.assignee}
-                          onChange={(e) =>
-                            setEditDraft({
-                              ...editDraft,
-                              assignee: e.target.value,
-                            })
-                          }
-                          onBlur={() => saveInlineEdit(todo)}
-                          onKeyDown={(e) => {
-                            if (e.key === "Enter") {
-                              e.currentTarget.blur();
+                        ) : (
+                          todo.memo
+                        )}
+                      </td>
+                      <td
+                        className={`app-td py-3 pr-4 text-sm ${rowBgClass}`}
+                        onDoubleClick={() => beginFieldEdit(todo, "assignee")}
+                      >
+                        {editingRowId === todo.id &&
+                          editingField === "assignee" ? (
+                          <input
+                            type="text"
+                            value={editDraft.assignee}
+                            onChange={(e) =>
+                              setEditDraft({
+                                ...editDraft,
+                                assignee: e.target.value,
+                              })
                             }
-                          }}
-                          autoFocus
-                          className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
-                          list="assignee-options"
-                        />
-                      ) : (
-                        todo.assignee
-                      )}
-                    </td>
-                    <td className={`app-td py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
-                      <div className="flex justify-end gap-2">
-                        <button
-                          className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${
-                            todo.favorite
-                              ? "border-yellow-300 text-yellow-600"
-                              : "border-slate-300"
-                          }`}
-                          onClick={() => toggleFavorite(todo)}
-                          aria-label="お気に入りに登録"
-                          title="お気に入りに登録"
-                        >
-                          {todo.favorite ? "★" : "☆"}
-                        </button>
-                        <button
-                          className="app-btn rounded border border-emerald-300 px-2 py-1 text-emerald-700"
-                          onClick={() => handleComplete(todo)}
-                        >
-                          {todo.completed ? "完了取消" : "完了"}
-                        </button>
-                        <button
-                          className="app-btn rounded border border-red-300 px-2 py-1 text-red-600"
-                          onClick={() => handleDelete(todo.id)}
-                        >
-                          削除
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
+                            onBlur={() => saveInlineEdit(todo)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.currentTarget.blur();
+                              }
+                            }}
+                            autoFocus
+                            className="app-input w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                            list="assignee-options"
+                          />
+                        ) : (
+                          todo.assignee
+                        )}
+                      </td>
+                      <td className={`app-td py-3 pr-6 text-right ${rowBgClass} rounded-r`}>
+                        <div className="flex justify-end gap-2">
+                          <button
+                            className={`app-btn app-btn-star rounded border px-2 py-1 text-slate-700 ${todo.favorite
+                                ? "border-yellow-300 text-yellow-600"
+                                : "border-slate-300"
+                              }`}
+                            onClick={() => toggleFavorite(todo)}
+                            aria-label="お気に入りに登録"
+                            title="お気に入りに登録"
+                          >
+                            {todo.favorite ? "★" : "☆"}
+                          </button>
+                          <button
+                            className="app-btn rounded border border-emerald-300 px-2 py-1 text-emerald-700"
+                            onClick={() => handleComplete(todo)}
+                          >
+                            {todo.completed ? "完了取消" : "完了"}
+                          </button>
+                          <button
+                            className="app-btn rounded border border-red-300 px-2 py-1 text-red-600"
+                            onClick={() => handleDelete(todo.id)}
+                          >
+                            削除
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
                   );
                 })}
               </tbody>

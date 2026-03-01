@@ -11,5 +11,6 @@ class Todo(Base):
     due_date = Column(Date, nullable=False)
     title = Column(String(200), nullable=False)
     assignee = Column(String(100), nullable=False)
+    memo = Column(String(500), nullable=False, default="", server_default="")
     completed = Column(Boolean, nullable=False, default=False, server_default="0")
     favorite = Column(Boolean, nullable=False, default=False, server_default="0")

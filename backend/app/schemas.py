@@ -6,6 +6,7 @@ class TodoBase(BaseModel):
     due_date: date = Field(..., description="YYYY-MM-DD")
     title: str
     assignee: str
+    memo: str = ""
     completed: bool = False
     favorite: bool = False
 

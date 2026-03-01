@@ -35,6 +35,17 @@ def ensure_favorite_column():
 ensure_favorite_column()
 
 
+def ensure_memo_column():
+    inspector = inspect(engine)
+    columns = {col["name"] for col in inspector.get_columns("todos")}
+    if "memo" not in columns:
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE todos ADD COLUMN memo VARCHAR(500) DEFAULT ''"))
+
+
+ensure_memo_column()
+
+
 def seed_todos():
     seed(42)
     with SessionLocal() as db:
