@@ -848,7 +848,7 @@ export default function App() {
                             autoResizeTextarea(e.currentTarget);
                           }}
                           required
-                          className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none leading-6 box-border"
+                          className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 font-sans text-sm resize-none leading-6 box-border"
                           rows={1}
                           placeholder="例: 仕様書レビュー"
                         />
@@ -865,7 +865,7 @@ export default function App() {
                             setForm({ ...form, memo: e.target.value });
                             autoResizeTextarea(e.currentTarget);
                           }}
-                          className="w-full overflow-hidden px-2 py-2 border border-slate-400 bg-white font-sans text-sm resize-none leading-6 box-border"
+                          className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 font-sans text-sm resize-none leading-6 box-border"
                           rows={1}
                           placeholder="例: 要件確認済み"
                         />
@@ -973,7 +973,7 @@ export default function App() {
                                 }
                               }}
                               autoFocus
-                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 bg-white font-sans text-sm resize-none transition-colors leading-6 box-border"
+                              className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 font-sans text-sm resize-none transition-colors leading-6 box-border"
                               rows={1}
                             />
                           </div>
@@ -1008,7 +1008,7 @@ export default function App() {
                                 }
                               }}
                               autoFocus
-                              className="w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 bg-white font-sans text-sm resize-none transition-colors leading-6 box-border"
+                              className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 font-sans text-sm resize-none transition-colors leading-6 box-border"
                               rows={1}
                             />
                           </div>
@@ -1038,7 +1038,7 @@ export default function App() {
                               }
                             }}
                             autoFocus
-                            className="w-full max-w-full box-border px-2 py-2 border border-slate-400 bg-white font-sans text-sm leading-6"
+                            className="app-input w-full max-w-full box-border px-2 py-2 border border-slate-400 font-sans text-sm leading-6"
                             list="assignee-options"
                           />
                         ) : (

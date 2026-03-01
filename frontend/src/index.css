@@ -8,7 +8,9 @@
   color-scheme: light;
 }
 
-input, button, select {
+input,
+button,
+select {
   font: inherit;
 }
 
@@ -78,18 +80,34 @@ input, button, select {
   color: var(--app-accent-2) !important;
 }
 
-.app-dot-danger { background: var(--app-danger) !important; }
-.app-dot-warn { background: var(--app-warn) !important; }
-.app-dot-done { background: var(--app-done) !important; }
+.app-dot-danger {
+  background: var(--app-danger) !important;
+}
+
+.app-dot-warn {
+  background: var(--app-warn) !important;
+}
+
+.app-dot-done {
+  background: var(--app-done) !important;
+}
 
 .app-shell .text-slate-600,
 .app-shell .text-slate-500 {
   color: var(--app-muted) !important;
 }
 
-.app-shell .bg-red-100 { background: var(--app-danger) !important; }
-.app-shell .bg-yellow-100 { background: var(--app-warn) !important; }
-.app-shell .bg-slate-200 { background: var(--app-done) !important; }
+.app-shell .bg-red-100 {
+  background: var(--app-danger) !important;
+}
+
+.app-shell .bg-yellow-100 {
+  background: var(--app-warn) !important;
+}
+
+.app-shell .bg-slate-200 {
+  background: var(--app-done) !important;
+}
 
 .app-shell .border-slate-200,
 .app-shell .border-slate-300,
