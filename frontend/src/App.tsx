@@ -855,7 +855,30 @@ export default function App() {
                           className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 font-sans text-sm resize-none leading-6 box-border"
                           rows={1}
                           placeholder="例: 仕様書レビュー"
+                          list="favorite-title-options-add"
                         />
+                        <datalist id="favorite-title-options-add">
+                          {favoritesForAssignee(form.assignee).map((title) => (
+                            <option key={title} value={title} />
+                          ))}
+                        </datalist>
+                        {favoritesForAssignee(form.assignee).length > 0 && (
+                          <select
+                            value=""
+                            onChange={(e) => {
+                              if (!e.target.value) return;
+                              setForm({ ...form, title: e.target.value });
+                            }}
+                            className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                          >
+                            <option value="">お気に入りから選択</option>
+                            {favoritesForAssignee(form.assignee).map((title) => (
+                              <option key={title} value={title}>
+                                {title}
+                              </option>
+                            ))}
+                          </select>
+                        )}
                       </div>
                     </td>
                     <td className="w-[20%] py-3 px-2 break-words">
@@ -979,7 +1002,33 @@ export default function App() {
                               autoFocus
                               className="app-input w-full overflow-hidden px-2 py-2 border border-slate-400 group-hover:border-slate-600 font-sans text-sm resize-none transition-colors leading-6 box-border"
                               rows={1}
+                              list={`favorite-title-options-${todo.id}`}
                             />
+                            <datalist id={`favorite-title-options-${todo.id}`}>
+                              {favoritesForAssignee(editDraft.assignee).map((title) => (
+                                <option key={title} value={title} />
+                              ))}
+                            </datalist>
+                            {favoritesForAssignee(editDraft.assignee).length > 0 && (
+                              <select
+                                value=""
+                                onChange={(e) => {
+                                  if (!e.target.value) return;
+                                  setEditDraft({
+                                    ...editDraft,
+                                    title: e.target.value,
+                                  });
+                                }}
+                                className="mt-2 w-full rounded border border-slate-300 px-2 py-1 text-sm"
+                              >
+                                <option value="">お気に入りから選択</option>
+                                {favoritesForAssignee(editDraft.assignee).map((title) => (
+                                  <option key={title} value={title}>
+                                    {title}
+                                  </option>
+                                ))}
+                              </select>
+                            )}
                           </div>
                         ) : (
                           <div className="px-2 py-2 leading-6 border border-transparent box-border">{todo.title}</div>
